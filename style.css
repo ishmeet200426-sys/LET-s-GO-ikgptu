@@ -1,0 +1,442 @@
+/* Remove default margin and padding */
+body {
+    margin: 0;
+    padding: 0;
+    font-family: Arial, sans-serif;
+}
+
+/* Heading */
+h1 {
+    text-align: center;
+    background: #0d6efd;
+    color: white;
+    margin: 0;
+    padding: 15px;
+}
+
+/* Map container */
+#map {
+    width: 100%;
+    height: 600px;
+}
+/* Search Box */
+.search-box {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: 10px;
+    padding: 15px;
+    background: #f4f4f4;
+}
+
+.search-box input {
+    width: 100%;
+    max-width: 300px;
+    padding: 10px;
+    font-size: 16px;
+    border: 1px solid #ccc;
+    border-radius: 6px;
+}
+
+.search-box button {
+    padding: 10px 18px;
+    background: #0d6efd;
+    color: white;
+    border: none;
+    border-radius: 6px;
+    cursor: pointer;
+}
+
+.search-box button:hover {
+    background: #0b5ed7;
+}
+
+/* Reset Button - visually distinct from Search */
+#resetBtn {
+    background: #6c757d;
+}
+
+#resetBtn:hover {
+    background: #5a6268;
+}
+
+/* No Results Message */
+.no-results {
+    display: none;
+    text-align: center;
+    padding: 12px;
+    background: #fff3cd;
+    color: #664d03;
+    font-size: 15px;
+    border-bottom: 1px solid #ddd;
+}
+
+/* Category Filters */
+.filters {
+    display: flex;
+    justify-content: center;
+    flex-wrap: wrap;
+    gap: 15px;
+    padding: 12px;
+    background: white;
+    border-bottom: 1px solid #ddd;
+}
+
+.filters label {
+    font-size: 16px;
+    cursor: pointer;
+}
+
+.filters input {
+    margin-right: 5px;
+}
+#locationBtn{
+    background:#198754;
+    color:white;
+    border:none;
+    padding:10px 18px;
+    border-radius:6px;
+    cursor:pointer;
+}
+
+#locationBtn:hover{
+    background:#157347;
+}
+/* Nearest Place Buttons */
+.nearest-box {
+    display: flex;
+    justify-content: center;
+    gap: 10px;
+    padding: 12px;
+    background: #f8f9fa;
+    flex-wrap: wrap;
+}
+
+.nearest-box button {
+    padding: 10px 18px;
+    border: none;
+    border-radius: 6px;
+    background: #198754;
+    color: white;
+    cursor: pointer;
+    font-size: 15px;
+}
+
+.nearest-box button:hover {
+    background: #157347;
+}
+/* Assistant Panel */
+
+.assistant-panel{
+
+    display:none;
+
+    background:white;
+
+    margin:15px;
+
+    padding:20px;
+
+    border-radius:12px;
+
+    box-shadow:0 0 15px rgba(0,0,0,.2);
+
+}
+
+.assistant-panel h2{
+
+    text-align:center;
+
+    color:#0d6efd;
+
+}
+
+.assistant-grid{
+
+    display:grid;
+
+    grid-template-columns:repeat(2,1fr);
+
+    gap:15px;
+
+    margin-top:20px;
+
+}
+
+.card{
+
+    background:#0d6efd;
+
+    color:white;
+
+    text-align:center;
+
+    padding:20px;
+
+    border-radius:10px;
+
+    cursor:pointer;
+
+    font-size:18px;
+
+    transition:.3s;
+
+}
+
+.card:hover{
+
+    transform:scale(1.05);
+
+    background:#0b5ed7;
+
+}
+
+.close-btn{
+
+    width:100%;
+
+    margin-top:20px;
+
+    padding:12px;
+
+    background:#dc3545;
+
+    color:white;
+
+    border:none;
+
+    border-radius:8px;
+
+    cursor:pointer;
+
+}
+
+/* =========================
+   Admin Panel
+========================= */
+
+.admin-panel{
+    display:none;
+    width:90%;
+    max-width:900px;
+    margin:20px auto;
+    padding:20px;
+    background:#ffffff;
+    border-radius:10px;
+    box-shadow:0 3px 10px rgba(0,0,0,0.15);
+}
+
+.admin-panel h2{
+    margin-top:0;
+    color:#0d6efd;
+}
+
+.admin-row{
+    display:flex;
+    gap:15px;
+    margin-bottom:15px;
+    flex-wrap:wrap;
+}
+
+.admin-field{
+    flex:1;
+    display:flex;
+    flex-direction:column;
+}
+
+.admin-field label{
+    font-weight:bold;
+    margin-bottom:5px;
+}
+
+.admin-field input,
+.admin-field select,
+.admin-field textarea{
+    padding:10px;
+    border:1px solid #ccc;
+    border-radius:6px;
+    font-size:15px;
+}
+
+.admin-field textarea{
+    resize:vertical;
+    min-height:80px;
+}
+
+.admin-buttons{
+    display:flex;
+    gap:10px;
+    flex-wrap:wrap;
+    margin-top:15px;
+}
+
+.admin-buttons button{
+    padding:10px 18px;
+    border:none;
+    border-radius:6px;
+    color:white;
+    cursor:pointer;
+}
+
+#getLocationBtn{
+    background:#198754;
+}
+
+#generateJsonBtn{
+    background:#0d6efd;
+}
+
+#closeAdmin{
+    background:#dc3545;
+}
+
+#generatedJson{
+    width:100%;
+    margin-top:15px;
+    min-height:180px;
+    font-family:monospace;
+}
+
+/* =========================
+   Turn-by-turn Directions Panel
+========================= */
+
+.leaflet-routing-container {
+    max-width: 320px;
+    max-height: 400px;
+    overflow-y: auto;
+    font-size: 15px;
+    padding: 10px;
+    border-radius: 8px;
+    box-shadow: 0 2px 10px rgba(0,0,0,0.2);
+}
+
+.leaflet-routing-alt h2 {
+    font-size: 16px;
+}
+
+.leaflet-routing-alt h3 {
+    font-size: 14px;
+}
+
+/* =========================
+   Search Results Dropdown
+========================= */
+
+.search-results {
+    max-width: 400px;
+    margin: 0 auto;
+    background: white;
+    border-radius: 6px;
+    box-shadow: 0 3px 10px rgba(0,0,0,0.2);
+    overflow: hidden;
+}
+
+.search-result-item {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 10px;
+    padding: 10px 15px;
+    border-bottom: 1px solid #eee;
+    font-size: 15px;
+}
+
+.search-result-item:last-child {
+    border-bottom: none;
+}
+
+.search-result-item:hover {
+    background: #f0f4ff;
+}
+
+.result-info {
+    cursor: pointer;
+    flex: 1;
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 6px;
+}
+
+.result-name {
+    font-weight: 600;
+}
+
+.search-result-item .category-tag {
+    font-size: 12px;
+    color: #888;
+}
+
+.result-distance {
+    font-size: 12px;
+    color: #0d6efd;
+    font-weight: 600;
+}
+
+.result-navigate-btn {
+    padding: 6px 12px;
+    border: none;
+    border-radius: 6px;
+    background: #198754;
+    color: white;
+    cursor: pointer;
+    font-size: 13px;
+    white-space: nowrap;
+}
+
+.result-navigate-btn:hover {
+    background: #157347;
+}
+.category-marker-inner {
+    width: 26px;
+    height: 26px;
+    border-radius: 50%;
+    border: 2px solid white;
+    box-shadow: 0 0 4px rgba(0,0,0,0.4);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 13px;
+}
+/* =========================
+   Mobile Responsive Fixes
+========================= */
+
+@media (max-width: 600px) {
+
+    .search-box {
+        flex-direction: column;
+        align-items: stretch;
+    }
+
+    .search-box input,
+    .search-box button {
+        width: 100%;
+        max-width: none;
+        box-sizing: border-box;
+    }
+
+    body {
+        overflow-x: hidden;
+    }
+
+}
+.ios-install-banner {
+    position: fixed;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    background: #212529;
+    color: white;
+    padding: 12px 15px;
+    text-align: center;
+    font-size: 14px;
+    z-index: 9999;
+}
+
+.ios-banner-close {
+    margin-left: 10px;
+    cursor: pointer;
+    font-weight: bold;
+}

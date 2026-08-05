@@ -1,0 +1,219 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Smart Campus Navigation</title>
+
+    <!-- Registration gate: send unregistered visitors to login.html first.
+         Placed early in <head> so it redirects before the map renders. -->
+    <script>
+        if (!localStorage.getItem("scm_registered")) {
+            window.location.href = "login.html";
+        }
+    </script>
+ 
+    <!-- Leaflet CSS -->
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+    <link rel="stylesheet"
+    href="https://unpkg.com/leaflet-routing-machine@3.2.12/dist/leaflet-routing-machine.css"/>
+
+    <!-- Our CSS -->
+    <link rel="stylesheet" href="style.css">
+    <link rel="manifest" href="manifest.json">
+<meta name="theme-color" content="#0d6efd">
+<link rel="apple-touch-icon" href="icon-192.png">
+</head>
+<body>
+
+    <h1>🏫 Smart Campus Navigation</h1>
+
+    <!-- Search Box -->
+    <div class="search-box">
+        <input
+            type="text"
+            id="searchInput"
+            placeholder="Search a location..."
+        >
+        <button onclick="searchLocation()">Search</button>
+        <button id="resetBtn" type="button">Reset</button>
+        <button id="locationBtn" type="button">
+            📍 My Location
+        </button>
+        <!-- TEMPORARY: DELETE THIS BUTTON BEFORE FINAL SUBMISSION -->
+<button id="testModeBtn" type="button" onclick="toggleTestMode()">
+    🧪 Test Mode: OFF
+</button>
+        <!-- FIX: these were nested inside each other (invalid HTML).
+             Now they are siblings. -->
+        <button id="adminBtn" onclick="openAdmin()">
+            🔐 Admin
+        </button>
+        <button id="cancelRouteBtn" onclick="cancelNavigation()">
+            ❌ Cancel Navigation
+        </button>
+        <button id="installBtn" type="button" style="display:none;">
+    📲 Install App
+</button>
+    </div>
+
+    <!-- Live search results dropdown -->
+    <div id="searchResults" class="search-results"></div>
+
+    <!-- No Results Message -->
+    <div id="noResults" class="no-results">
+        😕 No location found. Try a different search or filter.
+    </div>
+
+    <!-- Category Filters -->
+    <div class="filters">
+
+        <!-- FIX: added Entrance so "Main Gate" (category: Entrance)
+             can actually be shown / filtered -->
+        <label><input type="checkbox" value="Entrance" checked> Entrance</label>
+
+        <label><input type="checkbox" value="Academic" checked> Academic</label>
+
+        <label><input type="checkbox" value="Administration" checked> Administration</label>
+
+        <label><input type="checkbox" value="Food" checked> Food</label>
+
+        <label><input type="checkbox" value="Sports" checked> Sports</label>
+
+        <label><input type="checkbox" value="Parking" checked> Parking</label>
+
+        <label><input type="checkbox" value="Facility" checked> Facility</label>
+
+        <label><input type="checkbox" value="Auditorium" checked> Auditorium</label>
+
+    </div>
+
+    <div class="nearest-box">
+        <button onclick="findNearest('Parking')">🚗 Nearest Parking</button>
+        <button onclick="findNearest('Food')">🍴 Nearest Food</button>
+
+        <button onclick="openAssistant()">🧠 Smart Assistant</button>
+    </div>
+
+    <div id="assistantPanel" class="assistant-panel">
+
+        <h2>🧠 Smart Campus Assistant</h2>
+
+        <div class="assistant-grid">
+
+            <div class="card" onclick="assistantAction('study')">
+                📚<br>Study
+            </div>
+
+            <div class="card">💻<br>Code</div>
+
+            <div class="card">🍴<br>Food</div>
+
+            <div class="card">🌳<br>Relax</div>
+
+            <div class="card">🚗<br>Parking</div>
+
+            <div class="card">🏥<br>Medical</div>
+
+            <div class="card">🏧<br>ATM</div>
+
+            <div class="card">🚻<br>Washroom</div>
+
+        </div>
+
+        <button class="close-btn" onclick="closeAssistant()">
+            Close
+        </button>
+
+    </div>
+
+    <div id="adminPanel" class="admin-panel">
+
+        <h2>🔐 Admin Panel</h2>
+
+        <div class="admin-row">
+
+            <div class="admin-field">
+                <label>Location Name</label>
+                <input type="text" id="adminName">
+            </div>
+
+            <div class="admin-field">
+                <label>Category</label>
+                <select id="adminCategory">
+                    <option>Entrance</option>
+                    <option>Academic</option>
+                    <option>Administration</option>
+                    <option>Food</option>
+                    <option>Sports</option>
+                    <option>Parking</option>
+                    <option>Facility</option>
+                    <option>Auditorium</option>
+                </select>
+            </div>
+
+        </div>
+
+        <div class="admin-field">
+            <label>Description</label>
+            <textarea id="adminDescription"></textarea>
+        </div>
+
+        <div class="admin-row">
+
+            <div class="admin-field">
+                <label>Latitude</label>
+                <input type="text" id="adminLatitude">
+            </div>
+
+            <div class="admin-field">
+                <label>Longitude</label>
+                <input type="text" id="adminLongitude">
+            </div>
+
+        </div>
+
+        <div class="admin-buttons">
+
+            <button id="getLocationBtn" onclick="captureLocation()">
+                📍 Get Current Location
+            </button>
+
+            <button id="generateJsonBtn" onclick="generateJSON()">
+                📄 Generate JSON
+            </button>
+
+            <!-- FIX: removed inline onclick="closeAdmin()" (that function
+                 didn't exist). script.js already wires this button's
+                 click handler via getElementById("closeAdmin").onclick -->
+            <button id="closeAdmin">
+                ❌ Close
+            </button>
+
+        </div>
+
+        <textarea
+            rows="8"
+            id="generatedJson"
+            readonly
+            placeholder="Generated JSON will appear here">
+        </textarea>
+
+    </div>
+
+    <!-- Map -->
+    <div id="map"></div>
+
+    <!-- Leaflet JS -->
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+    <script src="https://unpkg.com/leaflet-routing-machine@3.2.12/dist/leaflet-routing-machine.js"></script>
+    <!-- Our JavaScript -->
+    <script src="script.js"></script>
+    <script>
+    if ('serviceWorker' in navigator) {
+        navigator.serviceWorker.register('sw.js');
+    }
+</script>
+
+</body>
+</html>

@@ -1,0 +1,64 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Smart Campus Login</title>
+
+    <link rel="stylesheet" href="login.css">
+</head>
+<body>
+
+<div class="container">
+
+    <h1>🏫 Smart Campus</h1>
+    <h2>Student Registration</h2>
+
+    <form id="registerForm">
+
+        <label>Name</label>
+        <input
+            type="text"
+            id="name"
+            placeholder="Enter your name"
+            required
+        >
+
+        <label>Phone Number</label>
+        <input
+            type="tel"
+            id="phone"
+            placeholder="Enter phone number"
+            required
+        >
+
+        <label>Category</label>
+        <select id="category" required>
+            <option value="">Select Category</option>
+            <option value="Engineering">Engineering</option>
+            <option value="Management">Management</option>
+            <option value="Applied Courses">Applied Courses</option>
+        </select>
+
+        <label>Course</label>
+        <select id="course" required>
+            <option value="">Select Course</option>
+        </select>
+
+        <label>Batch</label>
+        <select id="batch" required>
+            <option value="">Select Batch</option>
+        </select>
+
+        <button type="submit">
+            Register & Continue
+        </button>
+
+    </form>
+
+</div>
+
+<script src="login.js"></script>
+
+</body>
+</html>

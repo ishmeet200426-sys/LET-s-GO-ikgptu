@@ -1,0 +1,93 @@
+[
+  {
+    "name": "Main Gate",
+    "category": "Entrance",
+    "latitude": 31.353528032684387,
+    "longitude": 75.45866836894066,
+    "description": "Main entrance of IKGPTU Jalandhar Campus."
+  },
+  {
+    "name": "Administrative Block 1",
+    "category": "Administration",
+    "latitude": 31.352157246394963,
+    "longitude": 75.46014848330942,
+    "description": "Administrative Block 1."
+  },
+  {
+    "name": "Administrative Block 2",
+    "category": "Administration",
+    "latitude": 31.352954360574785,
+    "longitude": 75.45947793104271,
+    "description": "Administrative Block 2."
+  },
+  {
+    "name": "Administrative Block 3 (PIT Building)",
+    "category": "Administration",
+    "latitude": 31.351749913542406,
+    "longitude": 75.46355914422877,
+    "description": "PIT Building."
+  },
+  {
+    "name": "Computer Lab",
+    "category": "Academic",
+    "latitude": 31.35241837074973,
+    "longitude": 75.46099606137459,
+    "description": "Computer Laboratory."
+  },
+  {
+    "name": "Library",
+    "category": "Academic",
+    "latitude": 31.352672247631055,
+    "longitude": 75.46074443930429,
+    "description": "Central Library."
+  },
+  {
+    "name": "Seminar Hall",
+    "category": "Academic",
+    "latitude": 31.352473344205727,
+    "longitude": 75.46001437285608,
+    "description": "Seminar Hall."
+  },
+  {
+    "name": "Canteen",
+    "category": "Food",
+    "latitude": 31.35211143502989,
+    "longitude": 75.46066346745029,
+    "description": "Campus Canteen."
+  },
+  {
+    "name": "Sports Ground",
+    "category": "Sports",
+    "latitude": 31.353689250911657,
+    "longitude": 75.45564518343284,
+    "description": "Sports Ground."
+  },
+  {
+    "name": "Parking",
+    "category": "Parking",
+    "latitude": 31.35246418196529,
+    "longitude": 75.45842650508848,
+    "description": "Main Parking Area."
+  },
+  {
+    "name": "ATM & Courier",
+    "category": "Facility",
+    "latitude": 31.352913130696706,
+    "longitude": 75.46057763676015,
+    "description": "ATM and Courier Services."
+  },
+  {
+    "name": "Shri Guru Nanak Dev Ji Auditorium",
+    "category": "Auditorium",
+    "latitude": 31.35348629706208,
+    "longitude": 75.45707383737383,
+    "description": "University Auditorium."
+  },
+ { 
+    "name": "cc lab ",
+    "category": "Academic",
+    "latitude": 31.352753740980923,
+    "longitude": 75.46033495385787,
+    "description": "welcome to lab - let's code"
+ }
+]
