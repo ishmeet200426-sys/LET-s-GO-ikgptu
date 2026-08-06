@@ -7,6 +7,17 @@
     "description": "Main entrance of IKGPTU Jalandhar Campus."
   },
   {
+    "name": "Main Building",
+    "category": "Administration",
+    "latitude": 31.35260925075653,
+    "longitude": 75.45830791264795,
+    "description": "Administrative hub — meet the Deans and other key offices here.",
+    "departments": [
+      { "name": "Seminar Hall (LH-4)", "floor": "Ground Floor" },
+      { "name": "Training & Placement Cell", "floor": "3rd Floor" }
+    ]
+  },
+  {
     "name": "AB-1",
     "category": "Academic",
     "latitude": 31.352157246394963,
@@ -24,16 +35,26 @@
     "category": "Academic",
     "latitude": 31.352954360574785,
     "longitude": 75.45947793104271,
-    "description": "Academic Block 2 (department/floor list pending confirmation).",
-    "departments": []
+    "description": "Academic Block 2",
+    "departments": [
+      { "name": "Civil Engineering", "floor": "Ground Floor" },
+      { "name": "Department of Languages", "floor": "1st Floor" },
+      { "name": "Electrical Engineering", "floor": "2nd & 3rd Floor" },
+      { "name": "Hotel Management and Catering", "floor": "4th Floor" },
+      { "name": "Department of Management", "floor": "5th Floor" }
+    ]
   },
   {
     "name": "AB-3 (PIT Building)",
     "category": "Academic",
     "latitude": 31.351749913542406,
     "longitude": 75.46355914422877,
-    "description": "Academic Block 3 / PIT Building (department/floor list pending confirmation).",
-    "departments": []
+    "description": "Academic Block 3 / PIT Building (Ground + 2 floors).",
+    "departments": [
+      { "name": "Applied Sciences", "floor": "Ground & 1st Floor" },
+      { "name": "Physics & Chemistry Labs", "floor": "Ground Floor" },
+      { "name": "Department of Journalism & Mass Communication", "floor": "2nd Floor" }
+    ]
   },
   {
     "name": "Computer Lab",
@@ -48,13 +69,6 @@
     "latitude": 31.352672247631055,
     "longitude": 75.46074443930429,
     "description": "Central Library."
-  },
-  {
-    "name": "Seminar Hall",
-    "category": "Academic",
-    "latitude": 31.352473344205727,
-    "longitude": 75.46001437285608,
-    "description": "Seminar Hall."
   },
   {
     "name": "Canteen",
@@ -91,11 +105,11 @@
     "longitude": 75.45707383737383,
     "description": "University Auditorium."
   },
-  {
-    "name": "cc lab",
+ { 
+    "name": "cc lab ",
     "category": "Academic",
     "latitude": 31.352753740980923,
     "longitude": 75.46033495385787,
     "description": "welcome to lab - let's code"
-  }
+ }
 ]

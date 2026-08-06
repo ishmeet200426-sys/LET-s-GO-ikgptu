@@ -255,83 +255,67 @@ function formatDistance(meters) {
     return (meters / 1000).toFixed(1) + " km away";
 }
 
-// Builds the dropdown, split into two grouped sections: Buildings,
-// and Departments & Offices. Shows everything when searchText is empty
-// (e.g. right when the user clicks the search box), and narrows both
-// groups as they type.
+// Builds the dropdown, with each building shown as a header row and
+// its departments/offices nested underneath it. This is what lets
+// someone see "AB-1 > Computer Science - 4th & 5th Floor" together,
+// instead of two disconnected lists.
 function updateSearchDropdown(searchText) {
 
     searchResultsBox.innerHTML = "";
 
     let selectedCategories = getSelectedCategories();
 
-    // --- Buildings section ---
-    let buildingMatches = allLocations.filter(location =>
-        selectedCategories.includes(location.category) &&
-        (searchText === "" || location.name.toLowerCase().includes(searchText))
-    );
+    // A building is shown if its own name matches, OR any of its
+    // departments match — either way we show the WHOLE building
+    // (all its departments listed) for context.
+    let matchingBuildings = allLocations.filter(location => {
 
-    // --- Departments & Offices section ---
-    let deptMatches = [];
-    allLocations.forEach(location => {
-        if (!selectedCategories.includes(location.category)) return;
-        (location.departments || []).forEach(dept => {
-            if (searchText === "" || dept.name.toLowerCase().includes(searchText)) {
-                deptMatches.push({ dept, location });
-            }
-        });
+        if (!selectedCategories.includes(location.category)) return false;
+
+        if (searchText === "") return true;
+
+        if (location.name.toLowerCase().includes(searchText)) return true;
+
+        if (location.departments) {
+            return location.departments.some(dept =>
+                dept.name.toLowerCase().includes(searchText)
+            );
+        }
+
+        return false;
+
     });
 
-    if (buildingMatches.length === 0 && deptMatches.length === 0) {
+    if (matchingBuildings.length === 0) {
         searchResultsBox.style.display = "none";
         map.invalidateSize();
         return;
     }
 
-    // Sort each group by distance if we know the user's location
+    // Sort by distance if we know the user's position
     if (userLocation) {
-        buildingMatches.sort((a, b) =>
+        matchingBuildings.sort((a, b) =>
             map.distance(userLocation, [a.latitude, a.longitude]) -
             map.distance(userLocation, [b.latitude, b.longitude])
         );
-        deptMatches.sort((a, b) =>
-            map.distance(userLocation, [a.location.latitude, a.location.longitude]) -
-            map.distance(userLocation, [b.location.latitude, b.location.longitude])
-        );
     }
 
-    if (buildingMatches.length > 0) {
-        const header = document.createElement("div");
-        header.className = "search-group-header";
-        header.textContent = "🏢 Buildings";
-        searchResultsBox.appendChild(header);
-
-        buildingMatches.forEach(location => {
-            searchResultsBox.appendChild(buildBuildingResultItem(location));
-        });
-    }
-
-    if (deptMatches.length > 0) {
-        const header = document.createElement("div");
-        header.className = "search-group-header";
-        header.textContent = "🏛️ Departments & Offices";
-        searchResultsBox.appendChild(header);
-
-        deptMatches.forEach(({ dept, location }) => {
-            searchResultsBox.appendChild(buildDeptResultItem(dept, location));
-        });
-    }
+    matchingBuildings.forEach(location => {
+        searchResultsBox.appendChild(buildBuildingGroup(location));
+    });
 
     searchResultsBox.style.display = "block";
     map.invalidateSize();
 
 }
 
-// Builds one dropdown row for a building result
-function buildBuildingResultItem(location) {
+// Builds one building "group": a clickable header row (navigates to
+// the building) followed by its nested department/office rows
+// (informational only — floor + name, no separate navigation).
+function buildBuildingGroup(location) {
 
-    const item = document.createElement("div");
-    item.className = "search-result-item";
+    const group = document.createElement("div");
+    group.className = "building-group";
 
     let distanceText = "";
     if (userLocation) {
@@ -339,64 +323,51 @@ function buildBuildingResultItem(location) {
         distanceText = `<span class="result-distance">${formatDistance(dist)}</span>`;
     }
 
-    item.innerHTML = `
+    const header = document.createElement("div");
+    header.className = "search-result-item building-header";
+    header.innerHTML = `
         <div class="result-info">
-            <span class="result-name">${location.name}</span>
+            <span class="result-name">🏢 ${location.name}</span>
             <span class="category-tag">${location.category}</span>
             ${distanceText}
         </div>
-        <button class="result-navigate-btn">🧭 Navigate to ${location.name}</button>
+        <button class="result-navigate-btn">🧭 Navigate</button>
     `;
 
-    item.querySelector(".result-info").addEventListener("click", () => {
+    header.querySelector(".result-info").addEventListener("click", () => {
         goToLocation(location);
     });
 
-    item.querySelector(".result-navigate-btn").addEventListener("click", (e) => {
+    header.querySelector(".result-navigate-btn").addEventListener("click", (e) => {
         e.stopPropagation();
         searchResultsBox.style.display = "none";
         navigateTo(location.latitude, location.longitude);
     });
 
-    return item;
+    group.appendChild(header);
 
-}
+    if (location.departments && location.departments.length > 0) {
 
-// Builds one dropdown row for a department/office result — always
-// navigates to the PARENT building, never directly to the department
-function buildDeptResultItem(dept, location) {
+        location.departments.forEach(dept => {
 
-    const item = document.createElement("div");
-    item.className = "search-result-item";
+            const deptRow = document.createElement("div");
+            deptRow.className = "dept-result-row";
 
-    let distanceText = "";
-    if (userLocation) {
-        const dist = map.distance(userLocation, [location.latitude, location.longitude]);
-        distanceText = `<span class="result-distance">${formatDistance(dist)}</span>`;
+            const floorText = dept.floor ? ` — ${dept.floor}` : "";
+            deptRow.textContent = `${dept.name}${floorText}`;
+
+            // Clicking a department also just takes you to its building
+            deptRow.addEventListener("click", () => {
+                goToLocation(location);
+            });
+
+            group.appendChild(deptRow);
+
+        });
+
     }
 
-    const floorText = dept.floor ? ` · ${dept.floor}` : "";
-
-    item.innerHTML = `
-        <div class="result-info">
-            <span class="result-name">${dept.name}</span>
-            <span class="category-tag">Building: ${location.name}${floorText}</span>
-            ${distanceText}
-        </div>
-        <button class="result-navigate-btn">🧭 Navigate to ${location.name}</button>
-    `;
-
-    item.querySelector(".result-info").addEventListener("click", () => {
-        goToLocation(location);
-    });
-
-    item.querySelector(".result-navigate-btn").addEventListener("click", (e) => {
-        e.stopPropagation();
-        searchResultsBox.style.display = "none";
-        navigateTo(location.latitude, location.longitude);
-    });
-
-    return item;
+    return group;
 
 }
 
