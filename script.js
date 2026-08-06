@@ -52,7 +52,18 @@ function getCategoryIcon(category) {
         popupAnchor: [0, -13]
     });
 }
-
+// Special branded pin for the Main Gate, using the university logo
+function getMainGateIcon() {
+    return L.divIcon({
+        className: 'main-gate-marker',
+        html: `<div class="main-gate-marker-inner">
+                    <img src="https://ptu.ac.in/wp-content/uploads/2020/05/ptu-logo-transparent.png" alt="IKGPTU">
+               </div>`,
+        iconSize: [46, 46],
+        iconAnchor: [23, 23],
+        popupAnchor: [0, -23]
+    });
+}
 // Store all locations and markers
 let allLocations = [];
 let markers = [];
