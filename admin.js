@@ -152,7 +152,7 @@ batchFilter.addEventListener("change", loadStudents);
 
 async function loadStudents(){
 
-    let url = "http://localhost:3000/students?";
+    let url = "https://let-s-go-ikgptu.onrender.com/students?";
 
     if(categoryFilter.value)
         url += `category=${encodeURIComponent(categoryFilter.value)}&`;

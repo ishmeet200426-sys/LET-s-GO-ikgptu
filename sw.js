@@ -2,7 +2,10 @@
 // caching the core files. This is what makes it feel "app-like"
 // instead of reloading everything from the internet every time.
 
-const CACHE_NAME = "campus-nav-v1";
+// IMPORTANT: bump this version number any time you change index.html,
+// script.js, style.css, or other cached files. Otherwise returning
+// visitors will keep seeing an old frozen copy forever.
+const CACHE_NAME = "campus-nav-v2";
 
 const FILES_TO_CACHE = [
     "./",
@@ -15,9 +18,25 @@ const FILES_TO_CACHE = [
 ];
 
 self.addEventListener("install", function(event) {
+    self.skipWaiting(); // activate the new service worker immediately
     event.waitUntil(
         caches.open(CACHE_NAME).then(function(cache) {
             return cache.addAll(FILES_TO_CACHE);
+        })
+    );
+});
+
+self.addEventListener("activate", function(event) {
+    // Delete any old, outdated caches so users stop getting stale pages
+    event.waitUntil(
+        caches.keys().then(function(cacheNames) {
+            return Promise.all(
+                cacheNames
+                    .filter(function(name) { return name !== CACHE_NAME; })
+                    .map(function(name) { return caches.delete(name); })
+            );
+        }).then(function() {
+            return self.clients.claim(); // take control of open tabs right away
         })
     );
 });

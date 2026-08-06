@@ -138,7 +138,7 @@ document.getElementById("registerForm").addEventListener("submit", async functio
 
     try{
 
-        const response = await fetch("http://localhost:3000/register",{
+        const response = await fetch("https://let-s-go-ikgptu.onrender.com/register",{
 
             method:"POST",
 
