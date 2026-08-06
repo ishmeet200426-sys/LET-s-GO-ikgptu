@@ -1,4 +1,3 @@
-// Create the map
 // Welcome overlay: shown once per browser session
 (function initWelcomeOverlay() {
     const overlay = document.getElementById("welcomeOverlay");
@@ -20,6 +19,8 @@
         if (e.target === overlay) dismiss();
     });
 })();
+
+// Create the map
 var map = L.map('map').setView([31.3529, 75.4595], 17);
 
 // Add OpenStreetMap tiles
@@ -52,6 +53,7 @@ function getCategoryIcon(category) {
         popupAnchor: [0, -13]
     });
 }
+
 // Special branded pin for the Main Gate, using the university logo
 function getMainGateIcon() {
     return L.divIcon({
@@ -64,6 +66,25 @@ function getMainGateIcon() {
         popupAnchor: [0, -23]
     });
 }
+
+// Builds the floor-wise department/office list shown inside a
+// building's popup. Buildings without confirmed department data
+// (departments: [] or missing) just show their plain description instead.
+function buildDepartmentListHTML(location) {
+
+    if (!location.departments || location.departments.length === 0) {
+        return "";
+    }
+
+    let rows = location.departments.map(dept => {
+        const floorText = dept.floor ? ` — ${dept.floor}` : "";
+        return `<div class="dept-row">${dept.name}${floorText}</div>`;
+    }).join("");
+
+    return `<div class="dept-list">${rows}</div>`;
+
+}
+
 // Store all locations and markers
 let allLocations = [];
 let markers = [];
@@ -104,30 +125,32 @@ function displayMarkers(locations) {
 
     locations.forEach(location => {
 
-    const isMainGate = location.name === "Main Gate";
+        const isMainGate = location.name === "Main Gate";
+        const deptHTML = buildDepartmentListHTML(location);
 
-    let marker = L.marker([
-location.latitude,
-location.longitude
+        let marker = L.marker([
+    location.latitude,
+    location.longitude
 ], { icon: isMainGate ? getMainGateIcon() : getCategoryIcon(location.category) })
 .addTo(map)
-    .bindPopup(`
-        <b>${isMainGate ? "🎓 " : ""}${location.name}</b><br>
-        ${location.description}
-        <br><br>
-        <button onclick="navigateTo(${location.latitude}, ${location.longitude})">
-            🧭 Navigate
-        </button>
-    `);
+        .bindPopup(`
+            <b>${isMainGate ? "🎓 " : "🏢 "}${location.name}</b><br>
+            ${location.description}
+            ${deptHTML}
+            <br>
+            <button onclick="navigateTo(${location.latitude}, ${location.longitude})">
+                🧭 Navigate
+            </button>
+        `);
 
-    markers.push(marker);
+        markers.push(marker);
 
-    bounds.push([
-        location.latitude,
-        location.longitude
-    ]);
+        bounds.push([
+            location.latitude,
+            location.longitude
+        ]);
 
-});
+    });
 
     // Show/hide "no results" message
     const noResultsMsg = document.getElementById("noResults");
@@ -185,9 +208,7 @@ function applyFilters() {
 
     let filtered = allLocations.filter(location => {
 
-        let matchesSearch = location.name
-            .toLowerCase()
-            .includes(searchText);
+        let matchesSearch = matchesLocationOrDepartment(location, searchText);
 
         let matchesCategory = selectedCategories.includes(location.category);
 
@@ -200,6 +221,38 @@ function applyFilters() {
     // Show a clickable dropdown of matches while the user is typing,
     // so they don't have to hunt for the right marker on the map
     updateSearchResults(searchText, filtered);
+
+}
+
+// Checks if the search text matches the building's own name, OR the
+// name of any department/office housed inside it. This is what lets
+// someone search "Computer Science" and still find AB-1.
+function matchesLocationOrDepartment(location, searchText) {
+
+    if (searchText === "") return true;
+
+    if (location.name.toLowerCase().includes(searchText)) return true;
+
+    if (location.departments) {
+        return location.departments.some(dept =>
+            dept.name.toLowerCase().includes(searchText)
+        );
+    }
+
+    return false;
+
+}
+
+// If the search text matched a department/office rather than the
+// building's own name, find and return that specific department object
+// (used to show its floor info in the search results dropdown).
+function findMatchingDepartment(location, searchText) {
+
+    if (!location.departments) return null;
+
+    return location.departments.find(dept =>
+        dept.name.toLowerCase().includes(searchText)
+    ) || null;
 
 }
 
@@ -247,13 +300,28 @@ function updateSearchResults(searchText, filtered) {
             distanceText = `<span class="result-distance">${formatDistance(dist)}</span>`;
         }
 
+        // If the search matched a department/office rather than the
+        // building's own name, show that department's info + floor,
+        // but the Navigate button still goes to the parent building.
+        const matchedDept = findMatchingDepartment(location, searchText);
+        const isBuildingNameMatch = location.name.toLowerCase().includes(searchText);
+
+        let resultLabel = location.name;
+        let resultSubtext = `<span class="category-tag">${location.category}</span>`;
+
+        if (matchedDept && !isBuildingNameMatch) {
+            resultLabel = matchedDept.name;
+            const floorText = matchedDept.floor ? ` · ${matchedDept.floor}` : "";
+            resultSubtext = `<span class="category-tag">Building: ${location.name}${floorText}</span>`;
+        }
+
         item.innerHTML = `
             <div class="result-info">
-                <span class="result-name">${location.name}</span>
-                <span class="category-tag">${location.category}</span>
+                <span class="result-name">${resultLabel}</span>
+                ${resultSubtext}
                 ${distanceText}
             </div>
-            <button class="result-navigate-btn">🧭 Navigate</button>
+            <button class="result-navigate-btn">🧭 Navigate to ${location.name}</button>
         `;
 
         // Clicking anywhere on the name/info area: jump map there + open popup

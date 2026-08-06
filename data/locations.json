@@ -7,25 +7,33 @@
     "description": "Main entrance of IKGPTU Jalandhar Campus."
   },
   {
-    "name": "Administrative Block 1",
-    "category": "Administration",
+    "name": "AB-1",
+    "category": "Academic",
     "latitude": 31.352157246394963,
     "longitude": 75.46014848330942,
-    "description": "Administrative Block 1."
+    "description": "Academic Block 1",
+    "departments": [
+      { "name": "Mechanical Engineering", "floor": "Ground & 1st Floor" },
+      { "name": "Electronics & Communication Engineering", "floor": "2nd & 3rd Floor" },
+      { "name": "Computer Science & Engineering", "floor": "4th & 5th Floor" },
+      { "name": "Business Incubation Centre", "floor": "" }
+    ]
   },
   {
-    "name": "Administrative Block 2",
-    "category": "Administration",
+    "name": "AB-2",
+    "category": "Academic",
     "latitude": 31.352954360574785,
     "longitude": 75.45947793104271,
-    "description": "Administrative Block 2."
+    "description": "Academic Block 2 (department/floor list pending confirmation).",
+    "departments": []
   },
   {
-    "name": "Administrative Block 3 (PIT Building)",
-    "category": "Administration",
+    "name": "AB-3 (PIT Building)",
+    "category": "Academic",
     "latitude": 31.351749913542406,
     "longitude": 75.46355914422877,
-    "description": "PIT Building."
+    "description": "Academic Block 3 / PIT Building (department/floor list pending confirmation).",
+    "departments": []
   },
   {
     "name": "Computer Lab",
@@ -83,11 +91,11 @@
     "longitude": 75.45707383737383,
     "description": "University Auditorium."
   },
- { 
-    "name": "cc lab ",
+  {
+    "name": "cc lab",
     "category": "Academic",
     "latitude": 31.352753740980923,
     "longitude": 75.46033495385787,
     "description": "welcome to lab - let's code"
- }
+  }
 ]

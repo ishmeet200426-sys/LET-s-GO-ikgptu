@@ -550,3 +550,15 @@ h1 {
     0%, 100% { box-shadow: 0 0 0 4px rgba(255, 193, 7, 0.3), 0 4px 10px rgba(0,0,0,0.3); }
     50%      { box-shadow: 0 0 0 8px rgba(255, 193, 7, 0.15), 0 4px 10px rgba(0,0,0,0.3); }
 }
+/* --- Department/office list inside building popups --- */
+.dept-list {
+    margin-top: 8px;
+    padding-top: 8px;
+    border-top: 1px solid #e9ecef;
+}
+
+.dept-row {
+    font-size: 13px;
+    color: #495057;
+    padding: 2px 0;
+}
