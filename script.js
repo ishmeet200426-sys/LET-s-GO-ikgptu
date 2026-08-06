@@ -195,16 +195,19 @@ const resetBtn = document.getElementById("resetBtn");
 // This is the single source of truth: it always looks at
 // BOTH the current search text AND the currently checked
 // categories, and applies both conditions together.
+function getSelectedCategories() {
+    let selected = [];
+    checkboxes.forEach(box => {
+        if (box.checked) selected.push(box.value);
+    });
+    return selected;
+}
+
 function applyFilters() {
 
     let searchText = searchInput.value.toLowerCase().trim();
 
-    let selectedCategories = [];
-    checkboxes.forEach(box => {
-        if (box.checked) {
-            selectedCategories.push(box.value);
-        }
-    });
+    let selectedCategories = getSelectedCategories();
 
     let filtered = allLocations.filter(location => {
 
@@ -218,9 +221,8 @@ function applyFilters() {
 
     displayMarkers(filtered);
 
-    // Show a clickable dropdown of matches while the user is typing,
-    // so they don't have to hunt for the right marker on the map
-    updateSearchResults(searchText, filtered);
+    // Show the grouped dropdown (Buildings / Departments & Offices)
+    updateSearchDropdown(searchText);
 
 }
 
@@ -243,19 +245,6 @@ function matchesLocationOrDepartment(location, searchText) {
 
 }
 
-// If the search text matched a department/office rather than the
-// building's own name, find and return that specific department object
-// (used to show its floor info in the search results dropdown).
-function findMatchingDepartment(location, searchText) {
-
-    if (!location.departments) return null;
-
-    return location.departments.find(dept =>
-        dept.name.toLowerCase().includes(searchText)
-    ) || null;
-
-}
-
 const searchResultsBox = document.getElementById("searchResults");
 
 // Converts raw meters into a friendly "120 m" or "1.4 km" string
@@ -266,83 +255,148 @@ function formatDistance(meters) {
     return (meters / 1000).toFixed(1) + " km away";
 }
 
-function updateSearchResults(searchText, filtered) {
+// Builds the dropdown, split into two grouped sections: Buildings,
+// and Departments & Offices. Shows everything when searchText is empty
+// (e.g. right when the user clicks the search box), and narrows both
+// groups as they type.
+function updateSearchDropdown(searchText) {
 
     searchResultsBox.innerHTML = "";
 
-    // Don't show the dropdown when the box is empty or nothing matches
-    if (searchText === "" || filtered.length === 0) {
+    let selectedCategories = getSelectedCategories();
+
+    // --- Buildings section ---
+    let buildingMatches = allLocations.filter(location =>
+        selectedCategories.includes(location.category) &&
+        (searchText === "" || location.name.toLowerCase().includes(searchText))
+    );
+
+    // --- Departments & Offices section ---
+    let deptMatches = [];
+    allLocations.forEach(location => {
+        if (!selectedCategories.includes(location.category)) return;
+        (location.departments || []).forEach(dept => {
+            if (searchText === "" || dept.name.toLowerCase().includes(searchText)) {
+                deptMatches.push({ dept, location });
+            }
+        });
+    });
+
+    if (buildingMatches.length === 0 && deptMatches.length === 0) {
         searchResultsBox.style.display = "none";
         map.invalidateSize();
         return;
     }
 
-    // If we know the user's position, show nearest matches first —
-    // this alone often removes the need to scroll/hunt through results
-    let results = filtered.slice();
-
+    // Sort each group by distance if we know the user's location
     if (userLocation) {
-        results.sort((a, b) => {
-            const distA = map.distance(userLocation, [a.latitude, a.longitude]);
-            const distB = map.distance(userLocation, [b.latitude, b.longitude]);
-            return distA - distB;
+        buildingMatches.sort((a, b) =>
+            map.distance(userLocation, [a.latitude, a.longitude]) -
+            map.distance(userLocation, [b.latitude, b.longitude])
+        );
+        deptMatches.sort((a, b) =>
+            map.distance(userLocation, [a.location.latitude, a.location.longitude]) -
+            map.distance(userLocation, [b.location.latitude, b.location.longitude])
+        );
+    }
+
+    if (buildingMatches.length > 0) {
+        const header = document.createElement("div");
+        header.className = "search-group-header";
+        header.textContent = "🏢 Buildings";
+        searchResultsBox.appendChild(header);
+
+        buildingMatches.forEach(location => {
+            searchResultsBox.appendChild(buildBuildingResultItem(location));
         });
     }
 
-    results.forEach(location => {
+    if (deptMatches.length > 0) {
+        const header = document.createElement("div");
+        header.className = "search-group-header";
+        header.textContent = "🏛️ Departments & Offices";
+        searchResultsBox.appendChild(header);
 
-        const item = document.createElement("div");
-        item.className = "search-result-item";
-
-        let distanceText = "";
-        if (userLocation) {
-            const dist = map.distance(userLocation, [location.latitude, location.longitude]);
-            distanceText = `<span class="result-distance">${formatDistance(dist)}</span>`;
-        }
-
-        // If the search matched a department/office rather than the
-        // building's own name, show that department's info + floor,
-        // but the Navigate button still goes to the parent building.
-        const matchedDept = findMatchingDepartment(location, searchText);
-        const isBuildingNameMatch = location.name.toLowerCase().includes(searchText);
-
-        let resultLabel = location.name;
-        let resultSubtext = `<span class="category-tag">${location.category}</span>`;
-
-        if (matchedDept && !isBuildingNameMatch) {
-            resultLabel = matchedDept.name;
-            const floorText = matchedDept.floor ? ` · ${matchedDept.floor}` : "";
-            resultSubtext = `<span class="category-tag">Building: ${location.name}${floorText}</span>`;
-        }
-
-        item.innerHTML = `
-            <div class="result-info">
-                <span class="result-name">${resultLabel}</span>
-                ${resultSubtext}
-                ${distanceText}
-            </div>
-            <button class="result-navigate-btn">🧭 Navigate to ${location.name}</button>
-        `;
-
-        // Clicking anywhere on the name/info area: jump map there + open popup
-        item.querySelector(".result-info").addEventListener("click", () => {
-            goToLocation(location);
+        deptMatches.forEach(({ dept, location }) => {
+            searchResultsBox.appendChild(buildDeptResultItem(dept, location));
         });
-
-        // Clicking the Navigate button: skip the popup entirely and
-        // start walking directions immediately — this is the "1-click" path
-        item.querySelector(".result-navigate-btn").addEventListener("click", (e) => {
-            e.stopPropagation();
-            searchResultsBox.style.display = "none";
-            navigateTo(location.latitude, location.longitude);
-        });
-
-        searchResultsBox.appendChild(item);
-
-    });
+    }
 
     searchResultsBox.style.display = "block";
     map.invalidateSize();
+
+}
+
+// Builds one dropdown row for a building result
+function buildBuildingResultItem(location) {
+
+    const item = document.createElement("div");
+    item.className = "search-result-item";
+
+    let distanceText = "";
+    if (userLocation) {
+        const dist = map.distance(userLocation, [location.latitude, location.longitude]);
+        distanceText = `<span class="result-distance">${formatDistance(dist)}</span>`;
+    }
+
+    item.innerHTML = `
+        <div class="result-info">
+            <span class="result-name">${location.name}</span>
+            <span class="category-tag">${location.category}</span>
+            ${distanceText}
+        </div>
+        <button class="result-navigate-btn">🧭 Navigate to ${location.name}</button>
+    `;
+
+    item.querySelector(".result-info").addEventListener("click", () => {
+        goToLocation(location);
+    });
+
+    item.querySelector(".result-navigate-btn").addEventListener("click", (e) => {
+        e.stopPropagation();
+        searchResultsBox.style.display = "none";
+        navigateTo(location.latitude, location.longitude);
+    });
+
+    return item;
+
+}
+
+// Builds one dropdown row for a department/office result — always
+// navigates to the PARENT building, never directly to the department
+function buildDeptResultItem(dept, location) {
+
+    const item = document.createElement("div");
+    item.className = "search-result-item";
+
+    let distanceText = "";
+    if (userLocation) {
+        const dist = map.distance(userLocation, [location.latitude, location.longitude]);
+        distanceText = `<span class="result-distance">${formatDistance(dist)}</span>`;
+    }
+
+    const floorText = dept.floor ? ` · ${dept.floor}` : "";
+
+    item.innerHTML = `
+        <div class="result-info">
+            <span class="result-name">${dept.name}</span>
+            <span class="category-tag">Building: ${location.name}${floorText}</span>
+            ${distanceText}
+        </div>
+        <button class="result-navigate-btn">🧭 Navigate to ${location.name}</button>
+    `;
+
+    item.querySelector(".result-info").addEventListener("click", () => {
+        goToLocation(location);
+    });
+
+    item.querySelector(".result-navigate-btn").addEventListener("click", (e) => {
+        e.stopPropagation();
+        searchResultsBox.style.display = "none";
+        navigateTo(location.latitude, location.longitude);
+    });
+
+    return item;
 
 }
 
@@ -373,6 +427,19 @@ function goToLocation(location) {
 
 // Live search: fires on every keystroke, not just button click
 searchInput.addEventListener("input", applyFilters);
+
+// Show the full grouped dropdown as soon as the box is clicked/focused,
+// even before typing anything
+searchInput.addEventListener("focus", () => {
+    updateSearchDropdown(searchInput.value.toLowerCase().trim());
+});
+
+// Close the dropdown when clicking anywhere outside it
+document.addEventListener("click", (e) => {
+    if (!searchResultsBox.contains(e.target) && e.target !== searchInput) {
+        searchResultsBox.style.display = "none";
+    }
+});
 
 // Keep the button working too (in case someone clicks it)
 function searchLocation() {
