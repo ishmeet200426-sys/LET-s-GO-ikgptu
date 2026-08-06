@@ -440,3 +440,113 @@ h1 {
     cursor: pointer;
     font-weight: bold;
 }
+/* --- Welcome overlay --- */
+.welcome-overlay {
+    position: fixed;
+    inset: 0;
+    background: linear-gradient(135deg, #0d1b3d 0%, #0d6efd 100%);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 10000;
+    padding: 20px;
+    transition: opacity 0.35s ease, visibility 0.35s ease;
+}
+
+.welcome-overlay.hidden {
+    opacity: 0;
+    visibility: hidden;
+    pointer-events: none;
+}
+
+.welcome-card {
+    background: #ffffff;
+    border-radius: 18px;
+    padding: 40px 32px;
+    max-width: 420px;
+    width: 100%;
+    text-align: center;
+    box-shadow: 0 20px 60px rgba(0, 0, 0, 0.35);
+    animation: welcomePop 0.45s ease;
+}
+
+@keyframes welcomePop {
+    from { transform: scale(0.9); opacity: 0; }
+    to   { transform: scale(1);   opacity: 1; }
+}
+
+.welcome-logo {
+    width: 90px;
+    height: 90px;
+    object-fit: contain;
+    margin-bottom: 16px;
+}
+
+.welcome-title {
+    font-size: 24px;
+    font-weight: 700;
+    color: #0d1b3d;
+    margin: 0 0 4px 0;
+}
+
+.welcome-subtitle {
+    font-size: 14px;
+    font-weight: 600;
+    color: #0d6efd;
+    margin: 0 0 16px 0;
+    letter-spacing: 0.3px;
+}
+
+.welcome-text {
+    font-size: 14.5px;
+    color: #495057;
+    line-height: 1.5;
+    margin: 0 0 24px 0;
+}
+
+.welcome-btn {
+    background: #0d6efd;
+    color: #fff;
+    border: none;
+    padding: 12px 32px;
+    border-radius: 30px;
+    font-size: 15px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: background 0.2s ease, transform 0.15s ease;
+}
+
+.welcome-btn:hover {
+    background: #0b5ed7;
+    transform: translateY(-1px);
+}
+
+/* --- Main Gate marker: distinct, branded pin --- */
+.main-gate-marker {
+    background: transparent;
+    border: none;
+}
+
+.main-gate-marker-inner {
+    width: 46px;
+    height: 46px;
+    border-radius: 50%;
+    background: #fff;
+    border: 3px solid #ffc107;
+    box-shadow: 0 0 0 4px rgba(255, 193, 7, 0.3), 0 4px 10px rgba(0,0,0,0.3);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    animation: gatePulse 2s ease-in-out infinite;
+}
+
+.main-gate-marker-inner img {
+    width: 32px;
+    height: 32px;
+    object-fit: contain;
+}
+
+@keyframes gatePulse {
+    0%, 100% { box-shadow: 0 0 0 4px rgba(255, 193, 7, 0.3), 0 4px 10px rgba(0,0,0,0.3); }
+    50%      { box-shadow: 0 0 0 8px rgba(255, 193, 7, 0.15), 0 4px 10px rgba(0,0,0,0.3); }
+}

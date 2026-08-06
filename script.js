@@ -1,4 +1,25 @@
 // Create the map
+// Welcome overlay: shown once per browser session
+(function initWelcomeOverlay() {
+    const overlay = document.getElementById("welcomeOverlay");
+    const startBtn = document.getElementById("welcomeStartBtn");
+
+    if (!overlay) return;
+
+    if (sessionStorage.getItem("scm_welcome_seen")) {
+        overlay.classList.add("hidden");
+    }
+
+    function dismiss() {
+        overlay.classList.add("hidden");
+        sessionStorage.setItem("scm_welcome_seen", "true");
+    }
+
+    if (startBtn) startBtn.addEventListener("click", dismiss);
+    overlay.addEventListener("click", function(e) {
+        if (e.target === overlay) dismiss();
+    });
+})();
 var map = L.map('map').setView([31.3529, 75.4595], 17);
 
 // Add OpenStreetMap tiles
@@ -72,28 +93,30 @@ function displayMarkers(locations) {
 
     locations.forEach(location => {
 
-        let marker = L.marker([
-    location.latitude,
-    location.longitude
-], { icon: getCategoryIcon(location.category) })
+    const isMainGate = location.name === "Main Gate";
+
+    let marker = L.marker([
+location.latitude,
+location.longitude
+], { icon: isMainGate ? getMainGateIcon() : getCategoryIcon(location.category) })
 .addTo(map)
-        .bindPopup(`
-            <b>${location.name}</b><br>
-            ${location.description}
-            <br><br>
-            <button onclick="navigateTo(${location.latitude}, ${location.longitude})">
-                🧭 Navigate
-            </button>
-        `);
+    .bindPopup(`
+        <b>${isMainGate ? "🎓 " : ""}${location.name}</b><br>
+        ${location.description}
+        <br><br>
+        <button onclick="navigateTo(${location.latitude}, ${location.longitude})">
+            🧭 Navigate
+        </button>
+    `);
 
-        markers.push(marker);
+    markers.push(marker);
 
-        bounds.push([
-            location.latitude,
-            location.longitude
-        ]);
+    bounds.push([
+        location.latitude,
+        location.longitude
+    ]);
 
-    });
+});
 
     // Show/hide "no results" message
     const noResultsMsg = document.getElementById("noResults");
