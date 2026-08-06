@@ -126,6 +126,13 @@ document.getElementById("registerForm").addEventListener("submit", async functio
 
     e.preventDefault();
 
+    const submitBtn = e.target.querySelector("button[type='submit']") || e.target.querySelector("button");
+    if (submitBtn) {
+        submitBtn.disabled = true;
+        submitBtn.dataset.originalText = submitBtn.textContent;
+        submitBtn.textContent = "Registering...";
+    }
+
     const student = {
 
         name: document.getElementById("name").value,
@@ -164,14 +171,23 @@ if (response.ok) {
     window.location.href = "index.html";
 } else {
     alert(data.message || "Registration failed.");
+    if (submitBtn) {
+        submitBtn.disabled = false;
+        submitBtn.textContent = submitBtn.dataset.originalText;
+    }
 }
     }
 
     catch(error){
 
-        alert("Cannot connect to server.");
+        alert("Cannot connect to server. If this is your first request in a while, the server may be waking up — please wait 30 seconds and try again.");
 
         console.log(error);
+
+        if (submitBtn) {
+            submitBtn.disabled = false;
+            submitBtn.textContent = submitBtn.dataset.originalText;
+        }
 
     }
 

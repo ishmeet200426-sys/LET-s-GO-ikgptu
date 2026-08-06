@@ -51,11 +51,20 @@ app.post("/register", async (req, res) => {
         res.status(201).json(student);
 
     } catch (error) {
-        console.log(error);
-        res.status(500).json({
-            message: "Server Error"
+    console.log(error);
+    // If two requests race (e.g. a double-click) and both pass the
+    // duplicate check before either finishes, Prisma throws a unique
+    // constraint error here. Treat it the same as "already registered"
+    // instead of a raw server error.
+    if (error.code === "P2002") {
+        return res.status(400).json({
+            message: "Phone number already registered."
         });
     }
+    res.status(500).json({
+        message: "Server Error"
+    });
+}
 });
 app.get("/students", requireAdminKey, async (req, res) => {
 
