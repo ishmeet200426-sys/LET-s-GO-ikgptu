@@ -1,25 +1,3 @@
-// Welcome overlay: shown once per browser session
-(function initWelcomeOverlay() {
-    const overlay = document.getElementById("welcomeOverlay");
-    const startBtn = document.getElementById("welcomeStartBtn");
-
-    if (!overlay) return;
-
-    if (sessionStorage.getItem("scm_welcome_seen")) {
-        overlay.classList.add("hidden");
-    }
-
-    function dismiss() {
-        overlay.classList.add("hidden");
-        sessionStorage.setItem("scm_welcome_seen", "true");
-    }
-
-    if (startBtn) startBtn.addEventListener("click", dismiss);
-    overlay.addEventListener("click", function(e) {
-        if (e.target === overlay) dismiss();
-    });
-})();
-
 // Create the map
 var map = L.map('map').setView([31.3529, 75.4595], 17);
 
@@ -78,11 +56,48 @@ function buildDepartmentListHTML(location) {
 
     let rows = location.departments.map(dept => {
         const floorText = dept.floor ? ` — ${dept.floor}` : "";
-        return `<div class="dept-row">${dept.name}${floorText}</div>`;
+        return `<div class="panel-dept-row">${dept.name}${floorText}</div>`;
     }).join("");
 
-    return `<div class="dept-list">${rows}</div>`;
+    return rows;
 
+}
+
+// Opens the building info bottom sheet with this location's details,
+// replacing the old cramped Leaflet popup. Scales cleanly as more
+// departments/floors get added, unlike a fixed-size map popup.
+const buildingPanel = document.getElementById("buildingPanel");
+const buildingPanelContent = document.getElementById("buildingPanelContent");
+const closeBuildingPanelBtn = document.getElementById("closeBuildingPanel");
+
+function openBuildingPanel(location) {
+
+    const isMainGate = location.name === "Main Gate";
+    const deptHTML = buildDepartmentListHTML(location);
+
+    buildingPanelContent.innerHTML = `
+        <h2>${isMainGate ? "🎓 " : "🏢 "}${location.name}</h2>
+        <div class="panel-description">${location.description}</div>
+        ${deptHTML}
+        <button class="panel-navigate-btn" id="panelNavigateBtn">
+            🧭 Navigate Here
+        </button>
+    `;
+
+    document.getElementById("panelNavigateBtn").addEventListener("click", () => {
+        navigateTo(location.latitude, location.longitude);
+    });
+
+    buildingPanel.classList.add("open");
+
+}
+
+function closeBuildingPanel() {
+    buildingPanel.classList.remove("open");
+}
+
+if (closeBuildingPanelBtn) {
+    closeBuildingPanelBtn.addEventListener("click", closeBuildingPanel);
 }
 
 // Store all locations and markers
@@ -126,22 +141,14 @@ function displayMarkers(locations) {
     locations.forEach(location => {
 
         const isMainGate = location.name === "Main Gate";
-        const deptHTML = buildDepartmentListHTML(location);
 
         let marker = L.marker([
     location.latitude,
     location.longitude
 ], { icon: isMainGate ? getMainGateIcon() : getCategoryIcon(location.category) })
-.addTo(map)
-        .bindPopup(`
-            <b>${isMainGate ? "🎓 " : "🏢 "}${location.name}</b><br>
-            ${location.description}
-            ${deptHTML}
-            <br>
-            <button onclick="navigateTo(${location.latitude}, ${location.longitude})">
-                🧭 Navigate
-            </button>
-        `);
+.addTo(map);
+
+        marker.on("click", () => openBuildingPanel(location));
 
         markers.push(marker);
 
@@ -377,18 +384,7 @@ function goToLocation(location) {
 
     map.setView([location.latitude, location.longitude], 19);
 
-    markers.forEach(marker => {
-
-        let latlng = marker.getLatLng();
-
-        if (
-            latlng.lat === location.latitude &&
-            latlng.lng === location.longitude
-        ) {
-            marker.openPopup();
-        }
-
-    });
+    openBuildingPanel(location);
 
     // Hide the dropdown after a selection is made
     searchResultsBox.style.display = "none";
@@ -696,19 +692,8 @@ async function findNearest(category) {
     // Zoom to nearest place
     map.setView([nearest.latitude, nearest.longitude], 18);
 
-    // Open popup
-    markers.forEach(marker => {
-
-        let latlng = marker.getLatLng();
-
-        if (
-            latlng.lat === nearest.latitude &&
-            latlng.lng === nearest.longitude
-        ) {
-            marker.openPopup();
-        }
-
-    });
+    // Show its info in the bottom sheet
+    openBuildingPanel(nearest);
 
     // Automatically start navigation
     navigateTo(nearest.latitude, nearest.longitude);

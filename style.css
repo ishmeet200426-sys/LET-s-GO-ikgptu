@@ -2,19 +2,49 @@
 body {
     margin: 0;
     padding: 0;
-    font-family: Arial, sans-serif;
+    font-family: 'Inter', -apple-system, sans-serif;
+    background: #f8f9fa;
 }
 
-/* Heading */
-h1 {
-    text-align: center;
-    background: #0d6efd;
+h1, h2 {
+    font-family: 'Poppins', 'Inter', sans-serif;
+}
+
+/* Sticky app header */
+.app-header {
+    position: sticky;
+    top: 0;
+    z-index: 500;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    background: linear-gradient(135deg, #0d1b3d 0%, #0d6efd 100%);
     color: white;
-    margin: 0;
-    padding: 15px;
+    padding: 14px 18px;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.15);
+}
+
+.app-header-logo {
+    width: 34px;
+    height: 34px;
+    object-fit: contain;
+    background: white;
+    border-radius: 50%;
+    padding: 3px;
+}
+
+.app-header-title {
+    font-family: 'Poppins', sans-serif;
+    font-weight: 700;
+    font-size: 18px;
+    letter-spacing: 0.2px;
 }
 
 /* Map container */
+.map-wrapper {
+    position: relative;
+}
+
 #map {
     width: 100%;
     height: 600px;
@@ -36,6 +66,7 @@ h1 {
     font-size: 16px;
     border: 1px solid #ccc;
     border-radius: 6px;
+    font-family: 'Inter', sans-serif;
 }
 
 .search-box button {
@@ -45,6 +76,8 @@ h1 {
     border: none;
     border-radius: 6px;
     cursor: pointer;
+    font-family: 'Inter', sans-serif;
+    font-weight: 500;
 }
 
 .search-box button:hover {
@@ -71,36 +104,81 @@ h1 {
     border-bottom: 1px solid #ddd;
 }
 
-/* Category Filters */
+/* Category Filters — pill-shaped chips */
 .filters {
     display: flex;
     justify-content: center;
     flex-wrap: wrap;
-    gap: 15px;
+    gap: 8px;
     padding: 12px;
     background: white;
     border-bottom: 1px solid #ddd;
 }
 
-.filters label {
-    font-size: 16px;
+.filter-chip {
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    font-size: 13px;
+    font-weight: 500;
+    padding: 7px 14px;
+    border-radius: 20px;
+    background: #f1f3f5;
+    color: #495057;
     cursor: pointer;
+    border: 1.5px solid transparent;
+    transition: all 0.15s ease;
+    user-select: none;
 }
 
-.filters input {
-    margin-right: 5px;
-}
-#locationBtn{
-    background:#198754;
-    color:white;
-    border:none;
-    padding:10px 18px;
-    border-radius:6px;
-    cursor:pointer;
+.filter-chip:has(input:checked) {
+    background: #e7f1ff;
+    color: #0d6efd;
+    border-color: #0d6efd;
 }
 
-#locationBtn:hover{
-    background:#157347;
+.filter-chip input {
+    display: none;
+}
+
+/* Floating Action Buttons over the map */
+.fab {
+    position: absolute;
+    right: 16px;
+    width: 52px;
+    height: 52px;
+    border-radius: 50%;
+    border: none;
+    font-size: 22px;
+    background: white;
+    color: #212529;
+    box-shadow: 0 3px 10px rgba(0,0,0,0.25);
+    cursor: pointer;
+    z-index: 400;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: transform 0.15s ease;
+}
+
+.fab:hover {
+    transform: scale(1.06);
+}
+
+.fab-primary {
+    background: #198754;
+    color: white;
+    bottom: 90px;
+}
+
+#adminBtn.fab {
+    bottom: 20px;
+}
+
+#installBtn.fab {
+    bottom: 160px;
+    background: #0d6efd;
+    color: white;
 }
 /* Nearest Place Buttons */
 .nearest-box {
@@ -587,4 +665,106 @@ h1 {
 
 .dept-result-row:hover {
     background: #f1f3f5;
+}
+
+/* --- Building info bottom sheet: replaces the old cramped map popup --- */
+.building-panel {
+    position: absolute;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    max-height: 45%;
+    background: white;
+    border-radius: 18px 18px 0 0;
+    box-shadow: 0 -6px 24px rgba(0,0,0,0.2);
+    z-index: 600;
+    padding: 10px 20px 20px 20px;
+    transform: translateY(100%);
+    transition: transform 0.3s ease;
+    overflow-y: auto;
+}
+
+.building-panel.open {
+    transform: translateY(0);
+}
+
+.building-panel-handle {
+    width: 40px;
+    height: 4px;
+    background: #dee2e6;
+    border-radius: 3px;
+    margin: 0 auto 10px auto;
+}
+
+.building-panel-close {
+    position: absolute;
+    top: 14px;
+    right: 16px;
+    width: 30px;
+    height: 30px;
+    border-radius: 50%;
+    border: none;
+    background: #f1f3f5;
+    color: #495057;
+    font-size: 15px;
+    cursor: pointer;
+}
+
+.building-panel-close:hover {
+    background: #e9ecef;
+}
+
+#buildingPanelContent h2 {
+    font-family: 'Poppins', sans-serif;
+    font-size: 19px;
+    margin: 4px 0 2px 0;
+    padding-right: 30px;
+}
+
+#buildingPanelContent .panel-description {
+    font-size: 14px;
+    color: #6c757d;
+    margin-bottom: 10px;
+}
+
+#buildingPanelContent .panel-dept-row {
+    font-size: 14px;
+    color: #343a40;
+    padding: 7px 0;
+    border-top: 1px solid #f1f3f5;
+}
+
+#buildingPanelContent .panel-navigate-btn {
+    margin-top: 14px;
+    width: 100%;
+    padding: 13px;
+    background: #0d6efd;
+    color: white;
+    border: none;
+    border-radius: 10px;
+    font-size: 15px;
+    font-weight: 600;
+    cursor: pointer;
+}
+
+#buildingPanelContent .panel-navigate-btn:hover {
+    background: #0b5ed7;
+}
+
+@media (min-width: 768px) {
+    .building-panel {
+        left: auto;
+        right: 16px;
+        bottom: 16px;
+        width: 340px;
+        max-height: 70%;
+        border-radius: 16px;
+        transform: translateY(20px);
+        opacity: 0;
+        transition: transform 0.25s ease, opacity 0.25s ease;
+    }
+    .building-panel.open {
+        transform: translateY(0);
+        opacity: 1;
+    }
 }

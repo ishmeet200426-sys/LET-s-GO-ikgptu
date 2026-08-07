@@ -6,8 +6,31 @@
     <title>Smart Campus Login</title>
 
     <link rel="stylesheet" href="login.css">
+
+    <!-- Fonts: Poppins for headings, Inter for body -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@600;700&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+
+    <!-- Welcome overlay styling lives in style.css so both pages share it -->
+    <link rel="stylesheet" href="style.css">
 </head>
 <body>
+
+    <!-- Welcome overlay: the very first thing a new visitor sees,
+         before they even reach the registration form -->
+    <div id="welcomeOverlay" class="welcome-overlay">
+        <div class="welcome-card">
+            <img src="https://ptu.ac.in/wp-content/uploads/2020/05/ptu-logo-transparent.png"
+                 alt="IKGPTU Logo" class="welcome-logo">
+            <h1 class="welcome-title">Welcome to IKGPTU</h1>
+            <p class="welcome-subtitle">I.K. Gujral Punjab Technical University</p>
+            <p class="welcome-text">
+                Your Smart Campus Navigator — register below to unlock
+                live GPS tracking and turn-by-turn directions around campus.
+            </p>
+            <button id="welcomeStartBtn" class="welcome-btn">Get Started</button>
+        </div>
+    </div>
 
 <div class="container">
 

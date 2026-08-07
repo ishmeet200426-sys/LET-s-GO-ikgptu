@@ -5,14 +5,10 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Smart Campus Navigation</title>
 
-    <!-- Registration gate: send unregistered visitors to login.html first.
-         Placed early in <head> so it redirects before the map renders. -->
-    <script>
-        if (!localStorage.getItem("scm_registered")) {
-            window.location.href = "login.html";
-        }
-    </script>
- 
+    <!-- Fonts: Poppins for headings, Inter for body/data text -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@600;700&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+
     <!-- Leaflet CSS -->
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
     <link rel="stylesheet"
@@ -25,50 +21,28 @@
 <link rel="apple-touch-icon" href="icon-192.png">
 </head>
 <body>
-    <!-- Welcome overlay: shown once per browser session -->
-<div id="welcomeOverlay" class="welcome-overlay">
-    <div class="welcome-card">
-        <img src="https://ptu.ac.in/wp-content/uploads/2020/05/ptu-logo-transparent.png"
-             alt="IKGPTU Logo" class="welcome-logo">
-        <h1 class="welcome-title">Welcome to IKGPTU</h1>
-        <p class="welcome-subtitle">I.K. Gujral Punjab Technical University</p>
-        <p class="welcome-text">
-            Your Smart Campus Navigator — find your way around campus with
-            live GPS tracking and turn-by-turn directions.
-        </p>
-        <button id="welcomeStartBtn" class="welcome-btn">Get Started</button>
-    </div>
-</div>
 
-    <h1>🏫 Smart Campus Navigation</h1>
+    <!-- Sticky app header -->
+    <header class="app-header">
+        <img src="https://ptu.ac.in/wp-content/uploads/2020/05/ptu-logo-transparent.png" alt="IKGPTU" class="app-header-logo">
+        <span class="app-header-title">Smart Campus Navigation</span>
+    </header>
 
     <!-- Search Box -->
     <div class="search-box">
         <input
             type="text"
             id="searchInput"
-            placeholder="Search a location..."
+            placeholder="Search a building or department..."
         >
-        <button onclick="searchLocation()">Search</button>
         <button id="resetBtn" type="button">Reset</button>
-        <button id="locationBtn" type="button">
-            📍 My Location
-        </button>
         <!-- TEMPORARY: DELETE THIS BUTTON BEFORE FINAL SUBMISSION -->
 <button id="testModeBtn" type="button" onclick="toggleTestMode()">
     🧪 Test Mode: OFF
 </button>
-        <!-- FIX: these were nested inside each other (invalid HTML).
-             Now they are siblings. -->
-        <button id="adminBtn" onclick="openAdmin()">
-            🔐 Admin
-        </button>
         <button id="cancelRouteBtn" onclick="cancelNavigation()">
             ❌ Cancel Navigation
         </button>
-        <button id="installBtn" type="button" style="display:none;">
-    📲 Install App
-</button>
     </div>
 
     <!-- Live search results dropdown -->
@@ -79,33 +53,23 @@
         😕 No location found. Try a different search or filter.
     </div>
 
-    <!-- Category Filters -->
+    <!-- Category Filters, styled as pill chips -->
     <div class="filters">
 
-        <!-- FIX: added Entrance so "Main Gate" (category: Entrance)
-             can actually be shown / filtered -->
-        <label><input type="checkbox" value="Entrance" checked> Entrance</label>
-
-        <label><input type="checkbox" value="Academic" checked> Academic</label>
-
-        <label><input type="checkbox" value="Administration" checked> Administration</label>
-
-        <label><input type="checkbox" value="Food" checked> Food</label>
-
-        <label><input type="checkbox" value="Sports" checked> Sports</label>
-
-        <label><input type="checkbox" value="Parking" checked> Parking</label>
-
-        <label><input type="checkbox" value="Facility" checked> Facility</label>
-
-        <label><input type="checkbox" value="Auditorium" checked> Auditorium</label>
+        <label class="filter-chip"><input type="checkbox" value="Entrance" checked> Entrance</label>
+        <label class="filter-chip"><input type="checkbox" value="Academic" checked> Academic</label>
+        <label class="filter-chip"><input type="checkbox" value="Administration" checked> Administration</label>
+        <label class="filter-chip"><input type="checkbox" value="Food" checked> Food</label>
+        <label class="filter-chip"><input type="checkbox" value="Sports" checked> Sports</label>
+        <label class="filter-chip"><input type="checkbox" value="Parking" checked> Parking</label>
+        <label class="filter-chip"><input type="checkbox" value="Facility" checked> Facility</label>
+        <label class="filter-chip"><input type="checkbox" value="Auditorium" checked> Auditorium</label>
 
     </div>
 
     <div class="nearest-box">
         <button onclick="findNearest('Parking')">🚗 Nearest Parking</button>
         <button onclick="findNearest('Food')">🍴 Nearest Food</button>
-
         <button onclick="openAssistant()">🧠 Smart Assistant</button>
     </div>
 
@@ -216,7 +180,24 @@
     </div>
 
     <!-- Map -->
-    <div id="map"></div>
+    <!-- Map + floating buttons + building info panel -->
+    <div class="map-wrapper">
+
+        <div id="map"></div>
+
+        <!-- Floating action buttons -->
+        <button id="locationBtn" type="button" class="fab fab-primary" title="My Location">📍</button>
+        <button id="adminBtn" onclick="openAdmin()" class="fab" title="Admin">🔐</button>
+        <button id="installBtn" type="button" class="fab" style="display:none;" title="Install App">📲</button>
+
+        <!-- Building info bottom sheet: replaces the old cramped map popup -->
+        <div id="buildingPanel" class="building-panel">
+            <div class="building-panel-handle"></div>
+            <button id="closeBuildingPanel" class="building-panel-close">✕</button>
+            <div id="buildingPanelContent"></div>
+        </div>
+
+    </div>
 
     <!-- Leaflet JS -->
     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
