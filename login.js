@@ -145,73 +145,166 @@ course.addEventListener("change", () => {
 
 });
 
-document.getElementById("registerForm").addEventListener("submit", async function(e){
+let pendingEmail = "";
 
+document.getElementById("registerForm").addEventListener("submit", async function(e) {
     e.preventDefault();
 
-    const submitBtn = e.target.querySelector("button[type='submit']") || e.target.querySelector("button");
-    if (submitBtn) {
-        submitBtn.disabled = true;
-        submitBtn.dataset.originalText = submitBtn.textContent;
-        submitBtn.textContent = "Registering...";
-    }
+    const form = e.target;
+    const submitBtn = form.querySelector("button[type='submit']");
 
     const student = {
-
-        name: document.getElementById("name").value,
-        phone: document.getElementById("phone").value,
+        name: document.getElementById("name").value.trim(),
+        phone: document.getElementById("phone").value.trim(),
+        email: document.getElementById("email").value.trim(),
         category: category.value,
         course: course.value,
         batch: batch.value
-
     };
 
-    try{
+    // Basic validation
+    if (
+        !student.name ||
+        !student.phone ||
+        !student.email ||
+        !student.category ||
+        !student.course ||
+        !student.batch
+    ) {
+        alert("Please fill in all fields.");
+        return;
+    }
 
-        const response = await fetch("https://let-s-go-ikgptu.onrender.com/register",{
+    // Prevent multiple clicks
+    if (submitBtn) {
+        submitBtn.disabled = true;
+        submitBtn.dataset.originalText = submitBtn.textContent;
+        submitBtn.textContent = "Sending OTP...";
+    }
 
-            method:"POST",
+    try {
+        const response = await fetch(
+            "https://let-s-go-ikgptu.onrender.com/send-otp",
+            {
+                method: "POST",
 
-            headers:{
-                "Content-Type":"application/json"
-            },
+                headers: {
+                    "Content-Type": "application/json"
+                },
 
-            body:JSON.stringify(student)
-
-        });
+                body: JSON.stringify(student)
+            }
+        );
 
         const data = await response.json();
 
-if (response.ok) {
-    alert("Registration Successful!");
-    localStorage.setItem("scm_registered", "true");
-    window.location.href = "index.html";
-} else if (response.status === 400 && (data.message || "").includes("already registered")) {
-    // Already registered from another browser/device — let them through
-    // instead of trapping them on this page.
-    alert("This phone number is already registered. Taking you to the map.");
-    localStorage.setItem("scm_registered", "true");
-    window.location.href = "index.html";
-} else {
-    alert(data.message || "Registration failed.");
-    if (submitBtn) {
-        submitBtn.disabled = false;
-        submitBtn.textContent = submitBtn.dataset.originalText;
-    }
-}
-    }
+        if (response.ok) {
 
-    catch(error){
+            // Remember which email we are verifying
+            pendingEmail = student.email;
 
-        alert("Cannot connect to server. If this is your first request in a while, the server may be waking up — please wait 30 seconds and try again.");
+            // Hide registration form
+            form.style.display = "none";
+
+            // Show OTP section
+            document.getElementById("otpSection").style.display = "block";
+
+            alert("OTP sent successfully to your email.");
+
+        } else {
+
+            alert(data.message || "Unable to send OTP.");
+
+            if (submitBtn) {
+                submitBtn.disabled = false;
+                submitBtn.textContent = submitBtn.dataset.originalText;
+            }
+        }
+
+    } catch (error) {
 
         console.log(error);
+
+        alert(
+            "Cannot connect to server. If this is your first request in a while, the server may be waking up — please wait 30 seconds and try again."
+        );
 
         if (submitBtn) {
             submitBtn.disabled = false;
             submitBtn.textContent = submitBtn.dataset.originalText;
         }
+    }
+});
 
+document.getElementById("verifyOtpBtn").addEventListener("click", async function() {
+
+    const otpInput = document.getElementById("otp");
+    const otpMessage = document.getElementById("otpMessage");
+    const verifyBtn = document.getElementById("verifyOtpBtn");
+
+    const otp = otpInput.value.trim();
+
+    if (!otp) {
+        otpMessage.textContent = "Please enter the OTP.";
+        return;
     }
 
+    if (!/^\d{6}$/.test(otp)) {
+        otpMessage.textContent = "OTP must be exactly 6 digits.";
+        return;
+    }
+
+    verifyBtn.disabled = true;
+    verifyBtn.textContent = "Verifying...";
+
+    try {
+
+        const response = await fetch(
+            "https://let-s-go-ikgptu.onrender.com/verify-otp",
+            {
+                method: "POST",
+
+                headers: {
+                    "Content-Type": "application/json"
+                },
+
+                body: JSON.stringify({
+                    email: pendingEmail,
+                    otp: otp
+                })
+            }
+        );
+
+        const data = await response.json();
+
+        if (response.ok) {
+
+            otpMessage.textContent =
+                "Email verified successfully!";
+
+            localStorage.setItem("scm_registered", "true");
+
+            setTimeout(() => {
+                window.location.href = "index.html";
+            }, 800);
+
+        } else {
+
+            otpMessage.textContent =
+                data.message || "Invalid OTP.";
+
+            verifyBtn.disabled = false;
+            verifyBtn.textContent = "Verify OTP";
+        }
+
+    } catch (error) {
+
+        console.log(error);
+
+        otpMessage.textContent =
+            "Cannot connect to server. Please try again.";
+
+        verifyBtn.disabled = false;
+        verifyBtn.textContent = "Verify OTP";
+    }
 });

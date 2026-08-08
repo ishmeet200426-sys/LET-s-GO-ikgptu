@@ -10,8 +10,22 @@ model Student {
   id        Int      @id @default(autoincrement())
   name      String
   phone     String   @unique
+  email     String   @unique
   category  String
   course    String
   batch     String
   createdAt DateTime @default(now())
+}
+
+model PendingRegistration {
+  id            Int      @id @default(autoincrement())
+  name          String
+  phone         String   @unique
+  email         String   @unique
+  category      String
+  course        String
+  batch         String
+  otpHash       String
+  otpExpiry     DateTime
+  createdAt     DateTime @default(now())
 }
