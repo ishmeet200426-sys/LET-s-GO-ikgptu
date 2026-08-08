@@ -2,20 +2,44 @@ require("dotenv").config();
 const express = require("express");
 const cors = require("cors");
 const crypto = require("crypto");
-const nodemailer = require("nodemailer");
 const { PrismaClient } = require("@prisma/client");
 const app = express();
 app.set("etag", false);
 const prisma = new PrismaClient();
-const transporter = nodemailer.createTransport({
-    host: process.env.SMTP_HOST,
-    port: Number(process.env.SMTP_PORT),
-    secure: false,
-    auth: {
-        user: process.env.SMTP_USER,
-        pass: process.env.SMTP_PASSWORD
+
+// Sends an email through Brevo's HTTP API (port 443) instead of raw SMTP
+// (ports 587/465/25), because Render's free tier blocks outbound SMTP ports.
+async function sendBrevoEmail({ toEmail, toName, subject, text }) {
+    const response = await fetch("https://api.brevo.com/v3/smtp/email", {
+        method: "POST",
+        headers: {
+            "Content-Type": "application/json",
+            "Accept": "application/json",
+            "api-key": process.env.BREVO_API_KEY
+        },
+        body: JSON.stringify({
+            sender: {
+                name: "IKGPTU Smart Campus",
+                email: process.env.BREVO_SENDER_EMAIL
+            },
+            to: [
+                { email: toEmail, name: toName }
+            ],
+            subject,
+            textContent: text
+        })
+    });
+
+    if (!response.ok) {
+        const errorBody = await response.text();
+        throw new Error(
+            `Brevo API error (status ${response.status}): ${errorBody}`
+        );
     }
-});
+
+    return response.json();
+}
+
 function generateOTP() {
     return crypto.randomInt(100000, 1000000).toString();
 }
@@ -111,13 +135,10 @@ app.post("/send-otp", async (req, res) => {
             }
         });
 
-        // 9. Send the OTP through Brevo
-        await transporter.sendMail({
-            from: {
-                name: "IKGPTU Smart Campus",
-                address: process.env.SMTP_USER
-            },
-            to: email,
+        // 9. Send the OTP through Brevo's HTTP API
+        await sendBrevoEmail({
+            toEmail: email,
+            toName: name,
             subject: "IKGPTU Smart Campus - Email Verification",
             text: `Hello ${name},
 
