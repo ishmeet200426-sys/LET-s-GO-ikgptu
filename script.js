@@ -100,7 +100,7 @@ function openBuildingPanel(location) {
     `;
 
     document.getElementById("panelNavigateBtn").addEventListener("click", () => {
-        navigateTo(location.latitude, location.longitude);
+        navigateTo(location.latitude, location.longitude, location);
     });
 
     buildingPanel.classList.add("open");
@@ -123,7 +123,60 @@ let userLocation = null;
 let testModeActive = false;
 let watchId = null;
 let lastRerouteTime = 0;
-const REROUTE_INTERVAL_MS = 10000; // recalculate the route at most every 10 seconds
+const REROUTE_INTERVAL_MS = 5000; // recalculate the route at most every 5 seconds
+
+// Average human walking speed, used to make the "you are here" marker
+// glide smoothly between GPS updates instead of teleporting/jumping
+const AVERAGE_WALKING_SPEED_MPS = 1.4; // ~5 km/h
+const MIN_MARKER_ANIMATION_MS = 300;
+const MAX_MARKER_ANIMATION_MS = 4000; // caps huge jumps (e.g. GPS glitches)
+
+let markerAnimationFrame = null;
+
+// Tracks the full destination location object (not just lat/lng) for
+// the active navigation, so we can show its department/floor info
+// again right when the person actually arrives — not just back when
+// they first searched for it, which they've likely forgotten by then.
+let currentDestination = null;
+let hasShownArrivalInfo = false;
+const ARRIVAL_THRESHOLD_METERS = 15;
+
+
+// Smoothly moves `marker` from its current position to `toLatLng` over
+// `durationMs`, instead of snapping instantly — makes the live-tracking
+// dot look like it's actually walking rather than teleporting each time
+// a new GPS fix comes in.
+function animateMarkerTo(marker, toLatLng, durationMs) {
+
+    const fromLatLng = marker.getLatLng();
+    const startTime = performance.now();
+
+    if (markerAnimationFrame) {
+        cancelAnimationFrame(markerAnimationFrame);
+    }
+
+    function step(now) {
+
+        const elapsed = now - startTime;
+        const t = Math.min(elapsed / durationMs, 1);
+
+        const lat = fromLatLng.lat + (toLatLng.lat - fromLatLng.lat) * t;
+        const lng = fromLatLng.lng + (toLatLng.lng - fromLatLng.lng) * t;
+
+        marker.setLatLng([lat, lng]);
+
+        if (t < 1) {
+            markerAnimationFrame = requestAnimationFrame(step);
+        } else {
+            markerAnimationFrame = null;
+        }
+
+    }
+
+    markerAnimationFrame = requestAnimationFrame(step);
+
+}
+
 
 // Load locations from JSON (file lives inside the data/ subfolder)
 fetch('data/locations.json')
@@ -441,7 +494,7 @@ function buildBuildingGroup(location, precomputedDistanceText) {
     header.querySelector(".result-navigate-btn").addEventListener("click", (e) => {
         e.stopPropagation();
         searchResultsBox.style.display = "none";
-        navigateTo(location.latitude, location.longitude);
+        navigateTo(location.latitude, location.longitude, location);
     });
 
     group.appendChild(header);
@@ -594,17 +647,36 @@ function startLiveTracking() {
             const longitude = position.coords.longitude;
             userLocation = [latitude, longitude];
 
-            // Move the existing marker instead of creating a new one each time
+            const newLatLng = L.latLng(latitude, longitude);
+
+            // Move the existing marker smoothly (at roughly walking
+            // speed) instead of instantly snapping to the new GPS fix
             if (window.userMarker) {
-                window.userMarker.setLatLng([latitude, longitude]);
+
+                const distance = window.userMarker.getLatLng().distanceTo(newLatLng);
+                const duration = Math.min(
+                    Math.max((distance / AVERAGE_WALKING_SPEED_MPS) * 1000, MIN_MARKER_ANIMATION_MS),
+                    MAX_MARKER_ANIMATION_MS
+                );
+
+                animateMarkerTo(window.userMarker, newLatLng, duration);
+
+                // Pan the map in step with the marker's glide, rather
+                // than jumping the view instantly
+                map.panTo(newLatLng, {
+                    animate: true,
+                    duration: duration / 1000
+                });
+
             } else {
+
                 window.userMarker = L.marker([latitude, longitude])
                     .addTo(map)
                     .bindPopup("📍 You are here");
-            }
 
-            // Keep the map centered on the user while they walk
-            map.setView([latitude, longitude], 18);
+                map.setView([latitude, longitude], 18);
+
+            }
 
             // If navigation is active, recalculate the route from the
             // user's new position (throttled so it doesn't fire on
@@ -630,6 +702,27 @@ function startLiveTracking() {
 
             }
 
+            // Detect arrival at the destination building. Outdoor
+            // routing (OSRM) has no idea what's inside a building — no
+            // floors, no stairs — so once you're physically there, show
+            // the department/floor info again right at that moment,
+            // instead of relying on someone remembering what the search
+            // panel said 10 minutes and one building ago.
+            if (currentDestination && !hasShownArrivalInfo) {
+
+                const destinationLatLng = L.latLng(
+                    currentDestination.latitude,
+                    currentDestination.longitude
+                );
+                const distanceToDestination = newLatLng.distanceTo(destinationLatLng);
+
+                if (distanceToDestination <= ARRIVAL_THRESHOLD_METERS) {
+                    hasShownArrivalInfo = true;
+                    showArrivalInfo(currentDestination);
+                }
+
+            }
+
         },
 
         function(error) {
@@ -646,6 +739,22 @@ function startLiveTracking() {
 
 }
 
+// Shown once, right when live tracking detects you're actually at the
+// destination — reopens the building panel (which already lists every
+// department + floor) so that info is in front of you exactly when you
+// need it, not just back when you first searched.
+function showArrivalInfo(location) {
+
+    openBuildingPanel(location);
+
+    const banner = document.createElement("div");
+    banner.className = "arrival-banner";
+    banner.textContent = "📍 You've arrived! See department/floor details below.";
+
+    buildingPanelContent.insertBefore(banner, buildingPanelContent.firstChild);
+
+}
+
 function stopLiveTracking() {
     if (watchId !== null) {
         navigator.geolocation.clearWatch(watchId);
@@ -654,9 +763,27 @@ function stopLiveTracking() {
 }
 
 
-function navigateTo(lat, lng) {
+function showRouteLoading(text) {
+    const indicator = document.getElementById("routeLoadingIndicator");
+    const textEl = document.getElementById("routeLoadingText");
+    if (!indicator) return;
+    if (textEl && text) textEl.textContent = text;
+    indicator.classList.add("visible");
+}
+
+function hideRouteLoading() {
+    const indicator = document.getElementById("routeLoadingIndicator");
+    if (indicator) indicator.classList.remove("visible");
+}
+
+function navigateTo(lat, lng, destinationLocation) {
+
+    currentDestination = destinationLocation || null;
+    hasShownArrivalInfo = false;
 
     function createRoute(userLat, userLng) {
+
+        showRouteLoading("Calculating route...");
 
         // Remove previous route
         if (routingControl) {
@@ -690,6 +817,14 @@ function navigateTo(lat, lng) {
 
         }).addTo(map);
 
+        // Hide the loading indicator once the route actually arrives —
+        // or if OSRM fails, so it never gets stuck showing forever
+        routingControl.on("routesfound", hideRouteLoading);
+        routingControl.on("routingerror", () => {
+            hideRouteLoading();
+            console.log("Routing error — showing whatever route state is available.");
+        });
+
         // Save current location
         userLocation = [userLat, userLng];
 
@@ -708,6 +843,8 @@ function navigateTo(lat, lng) {
     }
 
     // Otherwise ask browser for location
+    showRouteLoading("Finding your location...");
+
     navigator.geolocation.getCurrentPosition(
 
         function(position) {
@@ -721,6 +858,7 @@ function navigateTo(lat, lng) {
 
         function() {
 
+            hideRouteLoading();
             alert("Unable to get your location.");
 
         }
@@ -801,7 +939,7 @@ async function findNearest(category) {
     openBuildingPanel(nearest);
 
     // Automatically start navigation
-    navigateTo(nearest.latitude, nearest.longitude);
+    navigateTo(nearest.latitude, nearest.longitude, nearest);
 
     // For Food specifically, also offer off-campus restaurant options
     // from the same button — no need for a separate one

@@ -193,6 +193,13 @@
 
         <div id="map"></div>
 
+        <!-- Shown while a route is being calculated (or while waiting
+             for GPS), hidden as soon as the route is ready or fails -->
+        <div id="routeLoadingIndicator" class="route-loading-indicator">
+            <span class="route-loading-spinner"></span>
+            <span id="routeLoadingText">Finding your location...</span>
+        </div>
+
         <!-- Floating action buttons -->
         <button id="locationBtn" type="button" class="fab fab-primary" title="My Location">📍</button>
         <button id="adminBtn" onclick="openAdmin()" class="fab" title="Admin">🔐</button>
