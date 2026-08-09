@@ -13,6 +13,17 @@
 
     <!-- Welcome overlay styling lives in style.css so both pages share it -->
     <link rel="stylesheet" href="style.css">
+
+    <!-- Already-registered gate: if this browser already completed OTP
+         verification before, skip the form entirely and go straight to
+         the map. Placed early in <head> so it redirects before the form
+         renders. An incognito/private tab has no localStorage carried
+         over, so it will always show the form — useful for testing. -->
+    <script>
+        if (localStorage.getItem("scm_registered")) {
+            window.location.href = "index.html";
+        }
+    </script>
 </head>
 <body>
 
