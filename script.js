@@ -744,7 +744,7 @@ function startLiveTracking() {
 // department + floor) so that info is in front of you exactly when you
 // need it, not just back when you first searched.
 function showArrivalInfo(location) {
-
+    hideStartPointBanner(); 
     openBuildingPanel(location);
 
     const banner = document.createElement("div");
@@ -761,7 +761,61 @@ function stopLiveTracking() {
         watchId = null;
     }
 }
+// This app only does outdoor, building-to-building walking directions —
+// there are no indoor floor plans. So if someone opens the app while
+// they're up on a floor inside a building, their GPS fix will still
+// resolve to roughly that building's outdoor marker. Rather than silently
+// starting the route there and leaving the person to guess why the blue
+// dot isn't next to them, we detect that they're starting near/inside a
+// building and say so explicitly.
+const INDOOR_PROXIMITY_METERS = 60; // rough building-footprint radius, since we don't have real footprint polygons
 
+// Finds the building the user's current position is close enough to
+// count as "starting from inside/near", excluding the destination
+// itself. Returns null if the start point isn't near any building
+// (i.e. they're genuinely out in the open, e.g. on a footpath).
+function findStartingBuilding(lat, lng, destinationLocation) {
+
+    const point = L.latLng(lat, lng);
+    let nearest = null;
+    let nearestDistance = Infinity;
+
+    allLocations.forEach(loc => {
+
+        if (destinationLocation && loc.name === destinationLocation.name) {
+            return;
+        }
+
+        const distance = point.distanceTo(L.latLng(loc.latitude, loc.longitude));
+
+        if (distance < nearestDistance) {
+            nearestDistance = distance;
+            nearest = loc;
+        }
+
+    });
+
+    return (nearest && nearestDistance <= INDOOR_PROXIMITY_METERS) ? nearest : null;
+
+}
+
+function showStartPointBanner(text) {
+    const banner = document.getElementById("startPointBanner");
+    const textEl = document.getElementById("startPointBannerText");
+    if (!banner) return;
+    if (textEl) textEl.textContent = text;
+    banner.classList.add("visible");
+}
+
+function hideStartPointBanner() {
+    const banner = document.getElementById("startPointBanner");
+    if (banner) banner.classList.remove("visible");
+}
+
+const startPointBannerCloseBtn = document.getElementById("startPointBannerClose");
+if (startPointBannerCloseBtn) {
+    startPointBannerCloseBtn.addEventListener("click", hideStartPointBanner);
+}
 
 function showRouteLoading(text) {
     const indicator = document.getElementById("routeLoadingIndicator");
@@ -784,6 +838,19 @@ function navigateTo(lat, lng, destinationLocation) {
     function createRoute(userLat, userLng) {
 
         showRouteLoading("Calculating route...");
+
+        // Tell the user up front which building's entrance this route
+        // actually starts from, if their GPS fix puts them inside/near
+        // one — since we can't route them out from a specific floor.
+        const startingBuilding = findStartingBuilding(userLat, userLng, destinationLocation);
+
+        if (startingBuilding) {
+            showStartPointBanner(
+                `🚩 Directions will start from the entrance of ${startingBuilding.name} — indoor routing isn't available.`
+            );
+        } else {
+            hideStartPointBanner();
+        }
 
         // Remove previous route
         if (routingControl) {
@@ -1083,6 +1150,7 @@ function cancelNavigation() {
 
     // Stop following the user's live position once navigation ends
     stopLiveTracking();
+    hideStartPointBanner();
 
 }
 // ===== One-click Install (Android/Chrome) =====

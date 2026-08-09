@@ -193,6 +193,15 @@
 
         <div id="map"></div>
 
+        <!-- Tells the user which building's entrance their walking
+     directions actually start from, when their GPS position
+     resolves inside/near a building (this app has no indoor
+     floor plans, so it can't route from a specific floor) -->
+<div id="startPointBanner" class="start-point-banner">
+    <span id="startPointBannerText"></span>
+    <span class="start-point-banner-close" id="startPointBannerClose">✕</span>
+</div>
+
         <!-- Shown while a route is being calculated (or while waiting
              for GPS), hidden as soon as the route is ready or fails -->
         <div id="routeLoadingIndicator" class="route-loading-indicator">

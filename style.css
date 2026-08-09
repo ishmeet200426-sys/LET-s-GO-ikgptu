@@ -528,6 +528,44 @@ h1, h2 {
     border-radius: 10px;
     margin-bottom: 12px;
 }
+/* --- Start point banner (tells the user which building entrance their
+       route actually starts from, since there's no indoor routing) --- */
+.start-point-banner {
+    position: absolute;
+    top: 64px;
+    left: 50%;
+    transform: translateX(-50%);
+    z-index: 1200;
+    max-width: 90%;
+
+    display: none;
+    align-items: center;
+    gap: 10px;
+
+    background: #fff3cd;
+    color: #664d03;
+    font-weight: 600;
+    font-size: 13px;
+    line-height: 1.35;
+    padding: 10px 14px;
+    border-radius: 10px;
+    box-shadow: 0 2px 10px rgba(0,0,0,0.15);
+}
+
+.start-point-banner.visible {
+    display: flex;
+}
+
+.start-point-banner-close {
+    cursor: pointer;
+    font-weight: bold;
+    opacity: 0.7;
+    flex-shrink: 0;
+}
+
+.start-point-banner-close:hover {
+    opacity: 1;
+}
 
 /* --- Route loading indicator (shown while GPS/route is being calculated) --- */
 .route-loading-indicator {
