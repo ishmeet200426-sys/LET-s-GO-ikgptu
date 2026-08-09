@@ -71,6 +71,16 @@ app.post("/send-otp", async (req, res) => {
             });
         }
 
+        // 1b. Phone must be exactly 10 digits, starting with 6-9 (valid
+        // Indian mobile format). This is the check that actually matters —
+        // the frontend one can always be bypassed by calling the API directly.
+        const phonePattern = /^[6-9]\d{9}$/;
+        if (!phonePattern.test(phone)) {
+            return res.status(400).json({
+                message: "Please enter a valid 10-digit phone number."
+            });
+        }
+
         // 2. Check whether this phone is already registered
         const existingPhone = await prisma.student.findUnique({
             where: {

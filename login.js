@@ -25,6 +25,15 @@ const category = document.getElementById("category");
 const course = document.getElementById("course");
 const batch = document.getElementById("batch");
 
+// Strip anything that isn't a digit as the user types, and cap at 10 digits
+// (backend still re-validates this — never trust frontend-only checks)
+const phoneInput = document.getElementById("phone");
+if (phoneInput) {
+    phoneInput.addEventListener("input", function() {
+        phoneInput.value = phoneInput.value.replace(/\D/g, "").slice(0, 10);
+    });
+}
+
 const courseData = {
     "Engineering": [
         "CSE/AIML/DS",
@@ -172,6 +181,13 @@ document.getElementById("registerForm").addEventListener("submit", async functio
         !student.batch
     ) {
         alert("Please fill in all fields.");
+        return;
+    }
+
+    // Phone must be exactly 10 digits, starting with 6-9 (valid Indian mobile format)
+    const phonePattern = /^[6-9]\d{9}$/;
+    if (!phonePattern.test(student.phone)) {
+        alert("Please enter a valid 10-digit phone number.");
         return;
     }
 

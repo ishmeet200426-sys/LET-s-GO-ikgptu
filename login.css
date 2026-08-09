@@ -56,6 +56,35 @@ select:focus{
     border-color:#0d6efd;
 }
 
+.phone-input-wrapper{
+    display:flex;
+    align-items:stretch;
+}
+
+.phone-prefix{
+    display:flex;
+    align-items:center;
+    padding:0 12px;
+    border:1px solid #ccc;
+    border-right:none;
+    border-radius:8px 0 0 8px;
+    background:#f0f2f5;
+    color:#555;
+    font-size:15px;
+    font-weight:bold;
+    white-space:nowrap;
+}
+
+.phone-input-wrapper input{
+    border-radius:0 8px 8px 0;
+}
+
+.phone-input-wrapper input:focus{
+    /* keep the prefix visually attached even when the input is focused */
+    position:relative;
+    z-index:1;
+}
+
 button{
     width:100%;
     margin-top:25px;

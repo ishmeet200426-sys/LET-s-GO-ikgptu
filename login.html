@@ -48,12 +48,18 @@
         >
 
         <label>Phone Number</label>
-        <input
-            type="tel"
-            id="phone"
-            placeholder="Enter phone number"
-            required
-        >
+        <div class="phone-input-wrapper">
+            <span class="phone-prefix">+91</span>
+            <input
+                type="tel"
+                id="phone"
+                placeholder="Enter 10-digit phone number"
+                inputmode="numeric"
+                maxlength="10"
+                pattern="[6-9][0-9]{9}"
+                required
+            >
+        </div>
         <label>Email Address</label>
 <input
     type="email"
