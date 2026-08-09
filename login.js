@@ -214,7 +214,16 @@ document.getElementById("registerForm").addEventListener("submit", async functio
 
         const data = await response.json();
 
-        if (response.ok) {
+        if (response.ok && data.alreadyRegistered) {
+
+            // Same phone + email as an existing verified student —
+            // this is a returning user, send them straight to the map.
+            alert("You're already registered — taking you to the map.");
+            localStorage.setItem("scm_registered", "true");
+            window.location.href = "index.html";
+            return;
+
+        } else if (response.ok) {
 
             // Remember which email we are verifying
             pendingEmail = student.email;

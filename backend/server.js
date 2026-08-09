@@ -81,29 +81,42 @@ app.post("/send-otp", async (req, res) => {
             });
         }
 
-        // 2. Check whether this phone is already registered
+        // 2. Look up whether this phone or email belongs to an existing,
+        // already-verified student. We check both together (not phone
+        // first, then email) so we can tell "this is the same person
+        // registering again" apart from "this is a genuine conflict".
         const existingPhone = await prisma.student.findUnique({
-            where: {
-                phone: phone
-            }
+            where: { phone: phone }
         });
 
-        if (existingPhone) {
-            return res.status(400).json({
-                message: "Phone number already registered."
+        const existingEmail = await prisma.student.findUnique({
+            where: { email: email }
+        });
+
+        // Same phone AND same email already registered together =
+        // this is a returning student, not a conflict. Let the frontend
+        // know so it can send them straight to the map instead of
+        // showing a dead-end error.
+        if (existingPhone && existingEmail && existingPhone.id === existingEmail.id) {
+            return res.status(200).json({
+                alreadyRegistered: true,
+                message: "You're already registered."
             });
         }
 
-        // 3. Check whether this email is already registered
-        const existingEmail = await prisma.student.findUnique({
-            where: {
-                email: email
-            }
-        });
+        // Phone matches one student, but the email doesn't match that
+        // same student — likely someone else's number, or a typo. Block it.
+        if (existingPhone) {
+            return res.status(400).json({
+                message: "This phone number is already registered with a different email."
+            });
+        }
 
+        // Email matches one student, but the phone doesn't match that
+        // same student. Block it the same way.
         if (existingEmail) {
             return res.status(400).json({
-                message: "Email already registered."
+                message: "This email is already registered with a different phone number."
             });
         }
 
