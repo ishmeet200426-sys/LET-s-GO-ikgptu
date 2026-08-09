@@ -1,6 +1,21 @@
 // Create the map
 var map = L.map('map').setView([31.3529, 75.4595], 17);
 
+// Small helper: delays calling fn until `wait` ms after the last call —
+// used so we don't hit the OSRM routing service on every single keystroke
+function debounce(fn, wait) {
+    let timer = null;
+    return function(...args) {
+        clearTimeout(timer);
+        timer = setTimeout(() => fn.apply(this, args), wait);
+    };
+}
+
+// Bumped every time a new search-result refinement starts, so an older
+// in-flight OSRM request can't overwrite a newer search's results if it
+// resolves late (the user kept typing while it was still loading)
+let searchRefinementId = 0;
+
 // Add OpenStreetMap tiles
 L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png', {
     attribution: '&copy; OpenStreetMap contributors'
@@ -299,7 +314,8 @@ function updateSearchDropdown(searchText) {
         return;
     }
 
-    // Sort by distance if we know the user's position
+    // Sort by distance if we know the user's position — straight-line
+    // distance first, since it's instant and keeps typing feeling snappy
     if (userLocation) {
         matchingBuildings.sort((a, b) =>
             map.distance(userLocation, [a.latitude, a.longitude]) -
@@ -314,18 +330,95 @@ function updateSearchDropdown(searchText) {
     searchResultsBox.style.display = "block";
     map.invalidateSize();
 
+    // Now quietly refine the ordering using REAL walking-route distance
+    // (via OSRM) for just the closest few results — straight-line
+    // distance can be misleading around buildings, but we don't want to
+    // hit the routing service for every single match on every keystroke,
+    // so only the top candidates get refined, and only after typing
+    // settles for a moment.
+    if (userLocation && matchingBuildings.length > 0) {
+        debouncedRefineSearchResults(matchingBuildings, searchResultsBox);
+    }
+
+}
+
+const debouncedRefineSearchResults = debounce(refineSearchResultsByWalkingDistance, 400);
+
+// Re-sorts the closest few search results by real walking-route distance
+// and re-renders. Guarded against stale/out-of-order responses, so if the
+// user keeps typing, an older refinement can't clobber newer results.
+async function refineSearchResultsByWalkingDistance(matchingBuildings, searchResultsBox) {
+
+    const thisRequestId = ++searchRefinementId;
+
+    const TOP_N = 6;
+    const topCandidates = matchingBuildings.slice(0, TOP_N);
+    const rest = matchingBuildings.slice(TOP_N);
+
+    try {
+
+        const distances = await Promise.all(
+            topCandidates.map(location =>
+                getWalkingDistance(userLocation, [location.latitude, location.longitude])
+            )
+        );
+
+        // A newer search happened while this was in flight — discard
+        if (thisRequestId !== searchRefinementId) return;
+
+        // Sanity check: if OSRM's route is implausibly longer than a
+        // straight line (a sign the real shortcut/footpath isn't mapped
+        // in OpenStreetMap yet), don't show a misleadingly long number —
+        // fall back to straight-line distance for that one spot instead.
+        const REALISTIC_ROUTE_RATIO = 2.2;
+
+        const refined = topCandidates
+            .map((location, index) => {
+                const straightLine = map.distance(userLocation, [location.latitude, location.longitude]);
+                const walking = distances[index];
+                const walkingLooksReasonable = walking <= straightLine * REALISTIC_ROUTE_RATIO;
+
+                return {
+                    location,
+                    distance: walkingLooksReasonable ? walking : straightLine
+                };
+            })
+            .sort((a, b) => a.distance - b.distance);
+
+        searchResultsBox.innerHTML = "";
+
+        refined.forEach(({ location, distance }) => {
+            searchResultsBox.appendChild(
+                buildBuildingGroup(location, formatDistance(distance))
+            );
+        });
+
+        rest.forEach(location => {
+            searchResultsBox.appendChild(buildBuildingGroup(location));
+        });
+
+    } catch (error) {
+
+        // Routing service failed — the straight-line order already
+        // rendered above is a perfectly fine fallback, just leave it
+        console.log("Search result walking-distance refinement failed, keeping straight-line order:", error);
+
+    }
+
 }
 
 // Builds one building "group": a clickable header row (navigates to
 // the building) followed by its nested department/office rows
 // (informational only — floor + name, no separate navigation).
-function buildBuildingGroup(location) {
+function buildBuildingGroup(location, precomputedDistanceText) {
 
     const group = document.createElement("div");
     group.className = "building-group";
 
     let distanceText = "";
-    if (userLocation) {
+    if (precomputedDistanceText) {
+        distanceText = `<span class="result-distance">${precomputedDistanceText}</span>`;
+    } else if (userLocation) {
         const dist = map.distance(userLocation, [location.latitude, location.longitude]);
         distanceText = `<span class="result-distance">${formatDistance(dist)}</span>`;
     }
@@ -658,6 +751,12 @@ async function findNearest(category) {
     let nearest = places[0];
     let minDistance = Infinity;
 
+    // If OSRM's route is implausibly longer than a straight line, the
+    // real shortcut probably isn't mapped in OpenStreetMap yet — use
+    // straight-line distance for that place instead of trusting a
+    // misleadingly long route.
+    const REALISTIC_ROUTE_RATIO = 2.2;
+
     try {
 
         const distances = await Promise.all(
@@ -666,10 +765,16 @@ async function findNearest(category) {
             )
         );
 
-        distances.forEach((distance, index) => {
+        distances.forEach((walkingDistance, index) => {
+            const place = places[index];
+            const straightLine = map.distance(userLocation, [place.latitude, place.longitude]);
+            const distance = walkingDistance <= straightLine * REALISTIC_ROUTE_RATIO
+                ? walkingDistance
+                : straightLine;
+
             if (distance < minDistance) {
                 minDistance = distance;
-                nearest = places[index];
+                nearest = place;
             }
         });
 
