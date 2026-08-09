@@ -223,6 +223,16 @@ document.getElementById("registerForm").addEventListener("submit", async functio
             window.location.href = "index.html";
             return;
 
+        } else if (response.ok && data.skippedVerification) {
+
+            // Today's Brevo OTP quota is used up — the student is
+            // registered directly (unverified), so let them into the
+            // map instead of leaving them stuck at the form.
+            alert(data.message);
+            localStorage.setItem("scm_registered", "true");
+            window.location.href = "index.html";
+            return;
+
         } else if (response.ok) {
 
             // Remember which email we are verifying

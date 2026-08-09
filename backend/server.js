@@ -43,6 +43,19 @@ async function sendBrevoEmail({ toEmail, toName, subject, text }) {
 function generateOTP() {
     return crypto.randomInt(100000, 1000000).toString();
 }
+
+// Stay safely under Brevo's free-tier 300/day limit — leaving a buffer
+// for the OTP verification-resend flow, plus any manual testing.
+const DAILY_OTP_LIMIT = 280;
+
+// Gives today's date as "YYYY-MM-DD" in Indian time, so the daily
+// counter resets at midnight IST (matches when actual campus usage
+// resets), not at midnight UTC.
+function getTodayKeyIST() {
+    return new Date().toLocaleDateString("en-CA", {
+        timeZone: "Asia/Kolkata"
+    });
+}
 app.use(cors());
 app.use(express.json());
 
@@ -94,27 +107,33 @@ app.post("/send-otp", async (req, res) => {
         });
 
         // Same phone AND same email already registered together =
-        // this is a returning student, not a conflict. Let the frontend
-        // know so it can send them straight to the map instead of
-        // showing a dead-end error.
+        // this is a returning student, not a conflict.
         if (existingPhone && existingEmail && existingPhone.id === existingEmail.id) {
-            return res.status(200).json({
-                alreadyRegistered: true,
-                message: "You're already registered."
-            });
-        }
 
-        // Phone matches one student, but the email doesn't match that
-        // same student — likely someone else's number, or a typo. Block it.
-        if (existingPhone) {
+            if (existingPhone.emailVerified) {
+                // Fully verified — send them straight to the map.
+                return res.status(200).json({
+                    alreadyRegistered: true,
+                    message: "You're already registered."
+                });
+            }
+
+            // They registered earlier during a daily-limit fallback and
+            // never got a real OTP. Let the code below try to send them
+            // one now (subject to today's quota) instead of dead-ending
+            // them here — this is how they eventually get fully verified.
+        } else if (existingPhone) {
+
+            // Phone matches one student, but the email doesn't match that
+            // same student — likely someone else's number, or a typo.
             return res.status(400).json({
                 message: "This phone number is already registered with a different email."
             });
-        }
 
-        // Email matches one student, but the phone doesn't match that
-        // same student. Block it the same way.
-        if (existingEmail) {
+        } else if (existingEmail) {
+
+            // Email matches one student, but the phone doesn't match that
+            // same student.
             return res.status(400).json({
                 message: "This email is already registered with a different phone number."
             });
@@ -130,21 +149,67 @@ app.post("/send-otp", async (req, res) => {
             }
         });
 
-        // 5. Generate a secure 6-digit OTP
+        // 5. Check today's OTP send count. If we're at (or past) the
+        // daily limit, don't even try sending an email — register the
+        // student directly as unverified instead of dead-ending them.
+        const todayKey = getTodayKeyIST();
+        const todayUsage = await prisma.otpUsage.findUnique({
+            where: { date: todayKey }
+        });
+        const sentSoFarToday = todayUsage ? todayUsage.count : 0;
+
+        if (sentSoFarToday >= DAILY_OTP_LIMIT) {
+
+            // Already exists as an unverified student (this is a
+            // re-verification attempt) — nothing to create, just let
+            // them know they already have access and to try again later.
+            if (existingPhone && existingEmail && existingPhone.id === existingEmail.id) {
+                return res.status(200).json({
+                    skippedVerification: true,
+                    message:
+                        "Today's email verification limit has been reached again. You already have map access — please try verifying your email again later."
+                });
+            }
+
+            const student = await prisma.student.create({
+                data: {
+                    name,
+                    phone,
+                    email,
+                    category,
+                    course,
+                    batch,
+                    emailVerified: false
+                }
+            });
+
+            console.log(
+                "Daily OTP limit reached — registered without verification:",
+                student.email
+            );
+
+            return res.status(200).json({
+                skippedVerification: true,
+                message:
+                    "Today's email verification limit has been reached, so you're registered without email verification for now. You can verify your email later."
+            });
+        }
+
+        // 6. Generate a secure 6-digit OTP
         const otp = generateOTP();
 
-        // 6. Hash the OTP before storing it
+        // 7. Hash the OTP before storing it
         const otpHash = crypto
             .createHash("sha256")
             .update(otp)
             .digest("hex");
 
-        // 7. OTP expires after 10 minutes
+        // 8. OTP expires after 10 minutes
         const otpExpiry = new Date(
             Date.now() + 10 * 60 * 1000
         );
 
-        // 8. Store the pending registration
+        // 9. Store the pending registration
         await prisma.pendingRegistration.create({
             data: {
                 name,
@@ -158,7 +223,7 @@ app.post("/send-otp", async (req, res) => {
             }
         });
 
-        // 9. Send the OTP through Brevo's HTTP API
+        // 10. Send the OTP through Brevo's HTTP API
         await sendBrevoEmail({
             toEmail: email,
             toName: name,
@@ -175,6 +240,14 @@ If you did not request this verification, you can ignore this email.
 
 Regards,
 IKGPTU Smart Campus`
+        });
+
+        // 11. Count this OTP against today's total, now that it actually
+        // sent successfully
+        await prisma.otpUsage.upsert({
+            where: { date: todayKey },
+            update: { count: { increment: 1 } },
+            create: { date: todayKey, count: 1 }
         });
 
         console.log("OTP sent to:", email);
@@ -241,17 +314,31 @@ app.post("/verify-otp", async (req, res) => {
             });
         }
 
-        // 6. Create the verified student
-        const student = await prisma.student.create({
-            data: {
-                name: pending.name,
-                phone: pending.phone,
-                email: pending.email,
-                category: pending.category,
-                course: pending.course,
-                batch: pending.batch
-            }
+        // 6. Create the verified student — unless one already exists
+        // with this email (they registered earlier during a daily-limit
+        // fallback and are now completing real verification), in which
+        // case just mark that existing record as verified instead of
+        // trying to create a duplicate (which would fail on the unique
+        // email/phone constraint).
+        const existingUnverified = await prisma.student.findUnique({
+            where: { email: pending.email }
         });
+
+        const student = existingUnverified
+            ? await prisma.student.update({
+                where: { id: existingUnverified.id },
+                data: { emailVerified: true }
+            })
+            : await prisma.student.create({
+                data: {
+                    name: pending.name,
+                    phone: pending.phone,
+                    email: pending.email,
+                    category: pending.category,
+                    course: pending.course,
+                    batch: pending.batch
+                }
+            });
 
         // 7. Delete the temporary registration
         await prisma.pendingRegistration.delete({
