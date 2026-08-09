@@ -190,7 +190,8 @@ function displayStudents(students){
     .filter(student=>{
 
         return student.name.toLowerCase().includes(keyword)
-        || student.phone.includes(keyword);
+        || student.phone.includes(keyword)
+        || (student.email || "").toLowerCase().includes(keyword);
 
     })
     .forEach(student=>{
@@ -200,6 +201,7 @@ function displayStudents(students){
             <td>${student.id}</td>
             <td>${student.name}</td>
             <td>${student.phone}</td>
+            <td>${student.email || ""}</td>
             <td>${student.category}</td>
             <td>${student.course}</td>
             <td>${student.batch}</td>
@@ -221,7 +223,9 @@ const originalDisplayStudents = displayStudents;
 displayStudents = function(students) {
     const keyword = searchInput.value.toLowerCase();
     currentStudents = students.filter(student =>
-        student.name.toLowerCase().includes(keyword) || student.phone.includes(keyword)
+        student.name.toLowerCase().includes(keyword)
+        || student.phone.includes(keyword)
+        || (student.email || "").toLowerCase().includes(keyword)
     );
     originalDisplayStudents(students);
 };
@@ -237,6 +241,7 @@ document.getElementById("exportBtn").addEventListener("click", () => {
         ID: s.id,
         Name: s.name,
         Phone: s.phone,
+        Email: s.email,
         Category: s.category,
         Course: s.course,
         Batch: s.batch
