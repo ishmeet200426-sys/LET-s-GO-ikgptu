@@ -30,7 +30,8 @@ async function getValidAdminToken() {
             return data.token;
         }
 
-        alert("Incorrect password. Try again.");
+        const errorData = await response.json().catch(() => ({}));
+        alert(errorData.message || "Login failed. Try again.");
 
     }
 

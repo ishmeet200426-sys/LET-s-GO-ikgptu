@@ -71,6 +71,16 @@ app.post("/admin/login", (req, res) => {
         return res.status(401).json({ message: "Incorrect admin password." });
     }
 
+    // If JWT_SECRET isn't set, jwt.sign() throws — without this check,
+    // that crash gets misreported to the user as "wrong password",
+    // which is confusing. Fail loudly and clearly instead.
+    if (!process.env.JWT_SECRET) {
+        console.log("Admin login failed: JWT_SECRET is not set in environment variables.");
+        return res.status(500).json({
+            message: "Server is misconfigured (missing JWT_SECRET). This is not a wrong-password issue."
+        });
+    }
+
     const token = jwt.sign(
         { role: "admin" },
         process.env.JWT_SECRET,
