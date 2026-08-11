@@ -1,115 +1,316 @@
 [
-  {
-    "name": "Main Gate",
-    "category": "Entrance",
-    "latitude": 31.353528032684387,
-    "longitude": 75.45866836894066,
-    "description": "Main entrance of IKGPTU Jalandhar Campus."
-  },
-  {
-    "name": "Main Building",
-    "category": "Administration",
-    "latitude": 31.35260925075653,
-    "longitude": 75.45830791264795,
-    "description": "Administrative hub — meet the Deans and other key offices here.",
-    "departments": [
-      { "name": "Seminar Hall (LH-4)", "floor": "Ground Floor" },
-      { "name": "Training & Placement Cell", "floor": "3rd Floor" }
-    ]
-  },
-  {
-    "name": "AB-1",
-    "category": "Academic",
-    "latitude": 31.352157246394963,
-    "longitude": 75.46014848330942,
-    "description": "Academic Block 1",
-    "departments": [
-      { "name": "Mechanical Engineering", "floor": "Ground & 1st Floor" },
-      { "name": "Electronics & Communication Engineering", "floor": "2nd & 3rd Floor" },
-      { "name": "Computer Science & Engineering", "floor": "4th & 5th Floor" },
-      { "name": "Business Incubation Centre", "floor": "" }
-    ]
-  },
-  {
-    "name": "AB-2",
-    "category": "Academic",
-    "latitude": 31.352954360574785,
-    "longitude": 75.45947793104271,
-    "description": "Academic Block 2",
-    "departments": [
-      { "name": "Civil Engineering", "floor": "Ground Floor" },
-      { "name": "Department of Languages", "floor": "1st Floor" },
-      { "name": "Electrical Engineering", "floor": "2nd & 3rd Floor" },
-      { "name": "Hotel Management and Catering", "floor": "4th Floor" },
-      { "name": "Department of Management", "floor": "5th Floor" }
-    ]
-  },
-  {
-    "name": "AB-3 (PIT Building)",
-    "category": "Academic",
-    "latitude": 31.351749913542406,
-    "longitude": 75.46355914422877,
-    "description": "Academic Block 3 / PIT Building (Ground + 2 floors).",
-    "departments": [
-      { "name": "Applied Sciences", "floor": "Ground & 1st Floor" },
-      { "name": "Physics & Chemistry Labs", "floor": "Ground Floor" },
-      { "name": "Department of Journalism & Mass Communication", "floor": "2nd Floor" }
-    ]
-  },
-  {
-    "name": "Computer Lab",
-    "category": "Academic",
-    "latitude": 31.35241837074973,
-    "longitude": 75.46099606137459,
-    "description": "Computer Laboratory."
-  },
-  {
-    "name": "Library",
-    "category": "Academic",
-    "latitude": 31.352672247631055,
-    "longitude": 75.46074443930429,
-    "description": "Central Library."
-  },
-  {
-    "name": "Canteen",
-    "category": "Food",
-    "latitude": 31.35211143502989,
-    "longitude": 75.46066346745029,
-    "description": "Campus Canteen."
-  },
-  {
-    "name": "Sports Ground",
-    "category": "Sports",
-    "latitude": 31.353689250911657,
-    "longitude": 75.45564518343284,
-    "description": "Sports Ground."
-  },
-  {
-    "name": "Parking",
-    "category": "Parking",
-    "latitude": 31.35246418196529,
-    "longitude": 75.45842650508848,
-    "description": "Main Parking Area."
-  },
-  {
-    "name": "ATM & Courier",
-    "category": "Service",
-    "latitude": 31.352913130696706,
-    "longitude": 75.46057763676015,
-    "description": "ATM and Courier Services."
-  },
-  {
-    "name": "Shri Guru Nanak Dev Ji Auditorium",
-    "category": "Auditorium",
-    "latitude": 31.35348629706208,
-    "longitude": 75.45707383737383,
-    "description": "University Auditorium."
-  },
- { 
-    "name": "cc lab ",
-    "category": "Academic",
-    "latitude": 31.352753740980923,
-    "longitude": 75.46033495385787,
-    "description": "welcome to lab - let's code"
- }
+    {
+        "name": "Main Gate",
+        "category": "Entrance",
+        "latitude": 31.353528032684387,
+        "longitude": 75.45866836894066,
+        "description": "Main entrance of IKGPTU Jalandhar Campus."
+    },
+    {
+        "name": "Main Building",
+        "category": "Administration",
+        "latitude": 31.35260925075653,
+        "longitude": 75.45830791264795,
+        "description": "Administrative hub — meet the Deans and other key offices here.",
+        "departments": [
+            {
+                "name": "Seminar Hall (LH-4)",
+                "floor": "Ground Floor"
+            },
+            {
+                "name": "Training & Placement Cell",
+                "floor": "3rd Floor"
+            },
+            {
+                "name": "Student Facilitation Centre",
+                "floor": ""
+            },
+            {
+                "name": "office - Youth affairs & sports",
+                "floor": "3rd Floor"
+            },
+            {
+                "name": "office - dean student welfare",
+                "floor": "4th Floor"
+            }
+        ]
+    },
+    {
+        "name": "AB-1",
+        "category": "Academic",
+        "latitude": 31.352157246394963,
+        "longitude": 75.46014848330942,
+        "description": "Academic Block 1",
+        "departments": [
+            {
+                "name": "Mechanical Engineering",
+                "floor": "Ground & 1st Floor"
+            },
+            {
+                "name": "Electronics & Communication Engineering",
+                "floor": "2nd & 3rd Floor"
+            },
+            {
+                "name": "Computer Science & Engineering",
+                "floor": "4th & 5th Floor"
+            },
+            {
+                "name": "Business Incubation Centre",
+                "floor": "1st Floor"
+            }
+        ]
+    },
+    {
+        "name": "AB-2",
+        "category": "Academic",
+        "latitude": 31.352954360574785,
+        "longitude": 75.45947793104271,
+        "description": "Academic Block 2",
+        "departments": [
+            {
+                "name": "Civil Engineering",
+                "floor": "Ground Floor"
+            },
+            {
+                "name": "Department of Languages",
+                "floor": "1st Floor"
+            },
+            {
+                "name": "Electrical Engineering",
+                "floor": "2nd & 3rd Floor"
+            },
+            {
+                "name": "Hotel Management and Catering",
+                "floor": "4th Floor"
+            },
+            {
+                "name": "Department of Management",
+                "floor": "5th Floor"
+            }
+        ]
+    },
+    {
+        "name": "AB-3 (PIT Building)",
+        "category": "Academic",
+        "latitude": 31.351749913542406,
+        "longitude": 75.46355914422877,
+        "description": "Academic Block 3 / PIT Building (Ground + 2 floors).",
+        "departments": [
+            {
+                "name": "Applied Sciences",
+                "floor": "Ground & 1st Floor"
+            },
+            {
+                "name": "Physics & Chemistry Labs",
+                "floor": "Ground Floor"
+            },
+            {
+                "name": "Department of Journalism & Mass Communication",
+                "floor": "2nd Floor"
+            }
+        ]
+    },
+    {
+        "name": "Computer Lab",
+        "category": "Academic",
+        "latitude": 31.35241837074973,
+        "longitude": 75.46099606137459,
+        "description": "Computer Laboratory."
+    },
+    {
+        "name": "Knowledge Resource Centre (Library)",
+        "category": "Academic",
+        "latitude": 31.352672247631055,
+        "longitude": 75.46074443930429,
+        "description": "Central Library."
+    },
+    {
+        "name": "Sports Ground",
+        "category": "Sports",
+        "latitude": 31.353689250911657,
+        "longitude": 75.45564518343284,
+        "description": "Sports Ground."
+    },
+    {
+        "name": "Parking",
+        "category": "Parking",
+        "latitude": 31.35246418196529,
+        "longitude": 75.45842650508848,
+        "description": "Main Parking Area."
+    },
+    {
+        "name": "Shri Guru Nanak Dev Ji Auditorium",
+        "category": "Auditorium",
+        "latitude": 31.35348629706208,
+        "longitude": 75.45707383737383,
+        "description": "University Auditorium."
+    },
+    {
+        "name": "cc lab ",
+        "category": "Academic",
+        "latitude": 31.352753740980923,
+        "longitude": 75.46033495385787,
+        "description": "welcome to lab - let's code"
+    },
+    {
+        "name": "BH-1",
+        "category": "Hostel",
+        "latitude": 31.353104773142174,
+        "longitude": 75.4544343854172,
+        "description": "Boys Hostel 1."
+    },
+    {
+        "name": "BH-2",
+        "category": "Hostel",
+        "latitude": 31.35399655429008,
+        "longitude": 75.4541554271982,
+        "description": "Boys Hostel 2."
+    },
+    {
+        "name": "GH-1",
+        "category": "Hostel",
+        "latitude": 31.354289740769246,
+        "longitude": 75.45457402426081,
+        "description": "Girls Hostel 1."
+    },
+    {
+        "name": "BH-3",
+        "category": "Hostel",
+        "latitude": 31.35052100327061,
+        "longitude": 75.46282667327077,
+        "description": "Boys Hostel 3."
+    },
+    {
+        "name": "GH",
+        "category": "Hostel",
+        "latitude": 31.35046030218475,
+        "longitude": 75.46341544180106,
+        "description": "Girls Hostel, near AB-3 (PIT Building)."
+    },
+    {
+        "name": "Visitor Washroom",
+        "category": "Facility",
+        "latitude": 31.35227291429569,
+        "longitude": 75.45847857782613,
+        "description": "Public washroom near the Main Gate area."
+    },
+    {
+        "name": "Open Theatre 1",
+        "category": "Facility",
+        "latitude": 31.35251182740627,
+        "longitude": 75.45876808731357,
+        "description": "Open-air theatre near the Main Building."
+    },
+    {
+        "name": "Main Building Parking",
+        "category": "Parking",
+        "latitude": 31.352813715896232,
+        "longitude": 75.45889437911805,
+        "description": "Parking area near the Main Building."
+    },
+    {
+        "name": "AB-1 Gate",
+        "category": "Academic",
+        "latitude": 31.352646206012327,
+        "longitude": 75.4586096883838,
+        "description": "Gate leading toward AB-1."
+    },
+    {
+        "name": "AB-1 Gate Parking",
+        "category": "Parking",
+        "latitude": 31.352646206012327,
+        "longitude": 75.4586096883838,
+        "description": "Parking beside the AB-1 gate."
+    },
+    {
+        "name": "Canteen 1 & 2",
+        "category": "Food",
+        "latitude": 31.35235056935871,
+        "longitude": 75.46030196708939,
+        "description": "Campus canteens, located together near the library."
+    },
+    {
+        "name": "Computer Centre",
+        "category": "Academic",
+        "latitude": 31.352451599529743,
+        "longitude": 75.46047461894875,
+        "description": "Computer Centre building, houses computer labs."
+    },
+    {
+        "name": "Open Theatre 2",
+        "category": "Facility",
+        "latitude": 31.352592147356336,
+        "longitude": 75.46019415539784,
+        "description": "Open-air theatre near the library/computer centre cluster."
+    },
+    {
+        "name": "Print Outs & Amul Stall",
+        "category": "Service",
+        "latitude": 31.352587093898833,
+        "longitude": 75.46031936081505,
+        "description": "Printout/xerox and Amul dairy stall."
+    },
+    {
+        "name": "Bank, ATM & Courier",
+        "category": "Service",
+        "latitude": 31.3525813797404,
+        "longitude": 75.46063412711233,
+        "description": "Bank, ATM, and courier services."
+    },
+    {
+        "name": "KRC Seminar Hall (LH-3)",
+        "category": "Academic",
+        "latitude": 31.352453643730467,
+        "longitude": 75.46034318692404,
+        "description": "Seminar hall inside the Knowledge Resource Centre."
+    },
+    {
+        "name": "AB-2 Gate",
+        "category": "Academic",
+        "latitude": 31.3526682203958,
+        "longitude": 75.46011480949267,
+        "description": "Gate leading toward AB-2."
+    },
+    {
+        "name": "AB-2 Gate Parking",
+        "category": "Parking",
+        "latitude": 31.3526682203958,
+        "longitude": 75.46011480949267,
+        "description": "Parking beside the AB-2 gate."
+    },
+    {
+        "name": "Badminton, Basketball & Outdoor Gym",
+        "category": "Sports",
+        "latitude": 31.35086052101525,
+        "longitude": 75.46339446115829,
+        "description": "Outdoor badminton and basketball courts with open gym equipment."
+    },
+    {
+        "name": "Gym",
+        "category": "Sports",
+        "latitude": 31.351499547690956,
+        "longitude": 75.46269692034342,
+        "description": "Campus gym, near AB-3."
+    },
+    {
+        "name": "NSS & NCC Offices",
+        "category": "Administration",
+        "latitude": 31.351863322347693,
+        "longitude": 75.46370113910352,
+        "description": "NSS and NCC unit offices."
+    },
+    {
+        "name": "AB-3 Parking",
+        "category": "Parking",
+        "latitude": 31.35160302633407,
+        "longitude": 75.46393334009046,
+        "description": "Parking near AB-3 (PIT Building)."
+    },
+    {
+        "name": "Gate No. 1",
+        "category": "Entrance",
+        "latitude": 31.351672391867975,
+        "longitude": 75.46378580939454,
+        "description": "Gate near AB-3 (PIT Building)."
+    }
 ]

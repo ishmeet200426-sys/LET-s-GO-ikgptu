@@ -32,6 +32,10 @@ const categoryStyles = {
     // (ATM, courier, etc.), not maintenance/upkeep, so the label and
     // icon (🛎️ service-desk bell) now both match what's tagged here.
     "Service":        { emoji: "🛎️", color: "#20c997" },
+    // Facility = physical campus amenities (washrooms, open theatres),
+    // separate from Service (ATM/bank/courier/printouts) — real data
+    // needed both, so this category is back with its own icon.
+    "Facility":       { emoji: "🚻", color: "#0dcaf0" },
     "Auditorium":     { emoji: "🎭", color: "#dc3545" },
     "Entrance":       { emoji: "🚪", color: "#212529" },
     "Hostel":         { emoji: "🛏️", color: "#e83e8c" }
