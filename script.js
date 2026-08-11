@@ -28,9 +28,13 @@ const categoryStyles = {
     "Food":           { emoji: "🍴", color: "#fd7e14" },
     "Sports":         { emoji: "🏟️", color: "#198754" },
     "Parking":        { emoji: "🅿️", color: "#6c757d" },
-    "Facility":       { emoji: "🔧", color: "#20c997" },
+    // Renamed from "Facility" — this is for student-facing services
+    // (ATM, courier, etc.), not maintenance/upkeep, so the label and
+    // icon (🛎️ service-desk bell) now both match what's tagged here.
+    "Service":        { emoji: "🛎️", color: "#20c997" },
     "Auditorium":     { emoji: "🎭", color: "#dc3545" },
-    "Entrance":       { emoji: "🚪", color: "#212529" }
+    "Entrance":       { emoji: "🚪", color: "#212529" },
+    "Hostel":         { emoji: "🛏️", color: "#e83e8c" }
 };
 
 // Builds a small colored circle icon with the right emoji for a category
