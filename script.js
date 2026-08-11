@@ -583,14 +583,27 @@ function buildBuildingGroup(location, precomputedDistanceText) {
         location.departments.forEach(dept => {
 
             const deptRow = document.createElement("div");
-            deptRow.className = "dept-result-row";
+            deptRow.className = "search-result-item dept-result-row";
 
             const floorText = dept.floor ? ` — ${dept.floor}` : "";
-            deptRow.textContent = `${dept.name}${floorText}`;
+            deptRow.innerHTML = `
+                <div class="result-info">
+                    <span class="result-name">${dept.name}${floorText}</span>
+                </div>
+                <button class="result-navigate-btn">🧭 Navigate</button>
+            `;
 
-            // Clicking a department also just takes you to its building
-            deptRow.addEventListener("click", () => {
+            // Clicking anywhere on the row (or its Navigate button) takes
+            // you to the parent building — a department has no coordinates
+            // of its own, so this is the correct target either way.
+            deptRow.querySelector(".result-info").addEventListener("click", () => {
                 goToLocation(location);
+            });
+
+            deptRow.querySelector(".result-navigate-btn").addEventListener("click", (e) => {
+                e.stopPropagation();
+                searchResultsBox.style.display = "none";
+                navigateTo(location.latitude, location.longitude, location);
             });
 
             group.appendChild(deptRow);

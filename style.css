@@ -724,6 +724,11 @@ h1, h2 {
     background: #f1f3f5;
 }
 
+.dept-result-row .result-navigate-btn {
+    padding: 4px 10px;
+    font-size: 12px;
+}
+
 /* Department shown as the PRIMARY result (search matched the
    department name directly, not the building name) — styled like its
    own building-header card, not a nested sub-row */
