@@ -330,6 +330,52 @@ function formatDistance(meters) {
     return (meters / 1000).toFixed(1) + " km away";
 }
 
+// Figures out how each location matched the search — by its own
+// building name, or by one or more department names inside it — so we
+// know whether to show the building or the department as the primary
+// result. A building-name match (or a browse-all empty search) shows
+// the full building card; a department-only match promotes just that
+// department to the primary result instead.
+function getSearchResultItems(searchText, selectedCategories) {
+
+    const items = [];
+
+    allLocations.forEach(location => {
+
+        if (!selectedCategories.includes(location.category)) return;
+
+        if (searchText === "") {
+            items.push({ type: "building", location });
+            return;
+        }
+
+        const buildingNameMatches = location.name.toLowerCase().includes(searchText);
+
+        if (buildingNameMatches) {
+            items.push({ type: "building", location });
+            return;
+        }
+
+        if (location.departments) {
+            location.departments
+                .filter(dept => dept.name.toLowerCase().includes(searchText))
+                .forEach(dept => {
+                    items.push({ type: "department", location, dept });
+                });
+        }
+
+    });
+
+    return items;
+
+}
+
+function renderSearchResultItem(item, precomputedDistanceText) {
+    return item.type === "department"
+        ? buildDepartmentResult(item.location, item.dept, precomputedDistanceText)
+        : buildBuildingGroup(item.location, precomputedDistanceText);
+}
+
 // Builds the dropdown, with each building shown as a header row and
 // its departments/offices nested underneath it. This is what lets
 // someone see "AB-1 > Computer Science - 4th & 5th Floor" together,
@@ -340,28 +386,9 @@ function updateSearchDropdown(searchText) {
 
     let selectedCategories = getSelectedCategories();
 
-    // A building is shown if its own name matches, OR any of its
-    // departments match — either way we show the WHOLE building
-    // (all its departments listed) for context.
-    let matchingBuildings = allLocations.filter(location => {
+    let items = getSearchResultItems(searchText, selectedCategories);
 
-        if (!selectedCategories.includes(location.category)) return false;
-
-        if (searchText === "") return true;
-
-        if (location.name.toLowerCase().includes(searchText)) return true;
-
-        if (location.departments) {
-            return location.departments.some(dept =>
-                dept.name.toLowerCase().includes(searchText)
-            );
-        }
-
-        return false;
-
-    });
-
-    if (matchingBuildings.length === 0) {
+    if (items.length === 0) {
         searchResultsBox.style.display = "none";
         map.invalidateSize();
         return;
@@ -370,14 +397,14 @@ function updateSearchDropdown(searchText) {
     // Sort by distance if we know the user's position — straight-line
     // distance first, since it's instant and keeps typing feeling snappy
     if (userLocation) {
-        matchingBuildings.sort((a, b) =>
-            map.distance(userLocation, [a.latitude, a.longitude]) -
-            map.distance(userLocation, [b.latitude, b.longitude])
+        items.sort((a, b) =>
+            map.distance(userLocation, [a.location.latitude, a.location.longitude]) -
+            map.distance(userLocation, [b.location.latitude, b.location.longitude])
         );
     }
 
-    matchingBuildings.forEach(location => {
-        searchResultsBox.appendChild(buildBuildingGroup(location));
+    items.forEach(item => {
+        searchResultsBox.appendChild(renderSearchResultItem(item));
     });
 
     searchResultsBox.style.display = "block";
@@ -389,8 +416,8 @@ function updateSearchDropdown(searchText) {
     // hit the routing service for every single match on every keystroke,
     // so only the top candidates get refined, and only after typing
     // settles for a moment.
-    if (userLocation && matchingBuildings.length > 0) {
-        debouncedRefineSearchResults(matchingBuildings, searchResultsBox);
+    if (userLocation && items.length > 0) {
+        debouncedRefineSearchResults(items, searchResultsBox);
     }
 
 }
@@ -400,19 +427,19 @@ const debouncedRefineSearchResults = debounce(refineSearchResultsByWalkingDistan
 // Re-sorts the closest few search results by real walking-route distance
 // and re-renders. Guarded against stale/out-of-order responses, so if the
 // user keeps typing, an older refinement can't clobber newer results.
-async function refineSearchResultsByWalkingDistance(matchingBuildings, searchResultsBox) {
+async function refineSearchResultsByWalkingDistance(items, searchResultsBox) {
 
     const thisRequestId = ++searchRefinementId;
 
     const TOP_N = 6;
-    const topCandidates = matchingBuildings.slice(0, TOP_N);
-    const rest = matchingBuildings.slice(TOP_N);
+    const topCandidates = items.slice(0, TOP_N);
+    const rest = items.slice(TOP_N);
 
     try {
 
         const distances = await Promise.all(
-            topCandidates.map(location =>
-                getWalkingDistance(userLocation, [location.latitude, location.longitude])
+            topCandidates.map(item =>
+                getWalkingDistance(userLocation, [item.location.latitude, item.location.longitude])
             )
         );
 
@@ -426,13 +453,13 @@ async function refineSearchResultsByWalkingDistance(matchingBuildings, searchRes
         const REALISTIC_ROUTE_RATIO = 2.2;
 
         const refined = topCandidates
-            .map((location, index) => {
-                const straightLine = map.distance(userLocation, [location.latitude, location.longitude]);
+            .map((item, index) => {
+                const straightLine = map.distance(userLocation, [item.location.latitude, item.location.longitude]);
                 const walking = distances[index];
                 const walkingLooksReasonable = walking <= straightLine * REALISTIC_ROUTE_RATIO;
 
                 return {
-                    location,
+                    item,
                     distance: walkingLooksReasonable ? walking : straightLine
                 };
             })
@@ -440,14 +467,14 @@ async function refineSearchResultsByWalkingDistance(matchingBuildings, searchRes
 
         searchResultsBox.innerHTML = "";
 
-        refined.forEach(({ location, distance }) => {
+        refined.forEach(({ item, distance }) => {
             searchResultsBox.appendChild(
-                buildBuildingGroup(location, formatDistance(distance))
+                renderSearchResultItem(item, formatDistance(distance))
             );
         });
 
-        rest.forEach(location => {
-            searchResultsBox.appendChild(buildBuildingGroup(location));
+        rest.forEach(item => {
+            searchResultsBox.appendChild(renderSearchResultItem(item));
         });
 
     } catch (error) {
@@ -457,6 +484,50 @@ async function refineSearchResultsByWalkingDistance(matchingBuildings, searchRes
         console.log("Search result walking-distance refinement failed, keeping straight-line order:", error);
 
     }
+
+}
+
+// Builds one result where a DEPARTMENT is the primary/prominent result
+// (not the building) — used when someone searches by department name
+// directly (e.g. "computer science"), since a new student won't know
+// building codes like "AB-1" but will know their department name.
+// Clicking still navigates to the parent building's coordinates —
+// departments don't have their own separate location.
+function buildDepartmentResult(location, dept, precomputedDistanceText) {
+
+    const row = document.createElement("div");
+    row.className = "search-result-item department-primary-result";
+
+    let distanceText = "";
+    if (precomputedDistanceText) {
+        distanceText = `<span class="result-distance">${precomputedDistanceText}</span>`;
+    } else if (userLocation) {
+        const dist = map.distance(userLocation, [location.latitude, location.longitude]);
+        distanceText = `<span class="result-distance">${formatDistance(dist)}</span>`;
+    }
+
+    const floorText = dept.floor ? ` — ${dept.floor}` : "";
+
+    row.innerHTML = `
+        <div class="result-info">
+            <span class="result-name">🎓 ${dept.name}</span>
+            <span class="result-subtitle">🏢 ${location.name}${floorText}</span>
+            ${distanceText}
+        </div>
+        <button class="result-navigate-btn">🧭 Navigate</button>
+    `;
+
+    row.querySelector(".result-info").addEventListener("click", () => {
+        goToLocation(location);
+    });
+
+    row.querySelector(".result-navigate-btn").addEventListener("click", (e) => {
+        e.stopPropagation();
+        searchResultsBox.style.display = "none";
+        navigateTo(location.latitude, location.longitude, location);
+    });
+
+    return row;
 
 }
 
@@ -744,7 +815,7 @@ function startLiveTracking() {
 // department + floor) so that info is in front of you exactly when you
 // need it, not just back when you first searched.
 function showArrivalInfo(location) {
-    hideStartPointBanner(); 
+
     openBuildingPanel(location);
 
     const banner = document.createElement("div");
@@ -761,61 +832,7 @@ function stopLiveTracking() {
         watchId = null;
     }
 }
-// This app only does outdoor, building-to-building walking directions —
-// there are no indoor floor plans. So if someone opens the app while
-// they're up on a floor inside a building, their GPS fix will still
-// resolve to roughly that building's outdoor marker. Rather than silently
-// starting the route there and leaving the person to guess why the blue
-// dot isn't next to them, we detect that they're starting near/inside a
-// building and say so explicitly.
-const INDOOR_PROXIMITY_METERS = 60; // rough building-footprint radius, since we don't have real footprint polygons
 
-// Finds the building the user's current position is close enough to
-// count as "starting from inside/near", excluding the destination
-// itself. Returns null if the start point isn't near any building
-// (i.e. they're genuinely out in the open, e.g. on a footpath).
-function findStartingBuilding(lat, lng, destinationLocation) {
-
-    const point = L.latLng(lat, lng);
-    let nearest = null;
-    let nearestDistance = Infinity;
-
-    allLocations.forEach(loc => {
-
-        if (destinationLocation && loc.name === destinationLocation.name) {
-            return;
-        }
-
-        const distance = point.distanceTo(L.latLng(loc.latitude, loc.longitude));
-
-        if (distance < nearestDistance) {
-            nearestDistance = distance;
-            nearest = loc;
-        }
-
-    });
-
-    return (nearest && nearestDistance <= INDOOR_PROXIMITY_METERS) ? nearest : null;
-
-}
-
-function showStartPointBanner(text) {
-    const banner = document.getElementById("startPointBanner");
-    const textEl = document.getElementById("startPointBannerText");
-    if (!banner) return;
-    if (textEl) textEl.textContent = text;
-    banner.classList.add("visible");
-}
-
-function hideStartPointBanner() {
-    const banner = document.getElementById("startPointBanner");
-    if (banner) banner.classList.remove("visible");
-}
-
-const startPointBannerCloseBtn = document.getElementById("startPointBannerClose");
-if (startPointBannerCloseBtn) {
-    startPointBannerCloseBtn.addEventListener("click", hideStartPointBanner);
-}
 
 function showRouteLoading(text) {
     const indicator = document.getElementById("routeLoadingIndicator");
@@ -838,19 +855,6 @@ function navigateTo(lat, lng, destinationLocation) {
     function createRoute(userLat, userLng) {
 
         showRouteLoading("Calculating route...");
-
-        // Tell the user up front which building's entrance this route
-        // actually starts from, if their GPS fix puts them inside/near
-        // one — since we can't route them out from a specific floor.
-        const startingBuilding = findStartingBuilding(userLat, userLng, destinationLocation);
-
-        if (startingBuilding) {
-            showStartPointBanner(
-                `🚩 Directions will start from the entrance of ${startingBuilding.name} — indoor routing isn't available.`
-            );
-        } else {
-            hideStartPointBanner();
-        }
 
         // Remove previous route
         if (routingControl) {
@@ -1150,7 +1154,6 @@ function cancelNavigation() {
 
     // Stop following the user's live position once navigation ends
     stopLiveTracking();
-    hideStartPointBanner();
 
 }
 // ===== One-click Install (Android/Chrome) =====
