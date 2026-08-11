@@ -1,12 +1,39 @@
 const table = document.getElementById("studentTable");
 
+const BACKEND_URL = "https://let-s-go-ikgptu.onrender.com";
+
 // --- Password gate ---
-// Ask for the admin key once per browser session (sessionStorage clears
-// when the tab/browser closes). This key must match ADMIN_KEY in backend/.env
-let adminKey = sessionStorage.getItem("scm_admin_key");
-if (!adminKey) {
-    adminKey = prompt("Enter admin password:");
-    if (adminKey) sessionStorage.setItem("scm_admin_key", adminKey);
+// The raw admin password is never stored anymore — only a signed,
+// expiring token exchanged for it once via /admin/login. Kept in
+// sessionStorage so it clears when the tab/browser closes, same as
+// before, but now it naturally expires after 6 hours even if the tab
+// stays open, and the actual password is never sent more than once.
+async function getValidAdminToken() {
+
+    let token = sessionStorage.getItem("scm_admin_token");
+    if (token) return token;
+
+    while (true) {
+
+        const password = prompt("Enter admin password:");
+        if (password === null) return null; // user cancelled
+
+        const response = await fetch(`${BACKEND_URL}/admin/login`, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ password })
+        });
+
+        if (response.ok) {
+            const data = await response.json();
+            sessionStorage.setItem("scm_admin_token", data.token);
+            return data.token;
+        }
+
+        alert("Incorrect password. Try again.");
+
+    }
+
 }
 
 const categoryFilter = document.getElementById("categoryFilter");
@@ -152,7 +179,13 @@ batchFilter.addEventListener("change", loadStudents);
 
 async function loadStudents(){
 
-    let url = "https://let-s-go-ikgptu.onrender.com/students?";
+    const token = await getValidAdminToken();
+    if (!token) {
+        table.innerHTML = "";
+        return;
+    }
+
+    let url = `${BACKEND_URL}/students?`;
 
     if(categoryFilter.value)
         url += `category=${encodeURIComponent(categoryFilter.value)}&`;
@@ -164,13 +197,16 @@ async function loadStudents(){
         url += `batch=${encodeURIComponent(batchFilter.value)}&`;
 
     const response = await fetch(url, {
-        headers: { "x-admin-key": adminKey || "" }
+        headers: { "Authorization": `Bearer ${token}` }
     });
 
     if (response.status === 401) {
-        sessionStorage.removeItem("scm_admin_key");
-        alert("Wrong password.");
+        // Token missing/expired — clear it and let the next call
+        // re-prompt for the password instead of just dead-ending here
+        sessionStorage.removeItem("scm_admin_token");
+        alert("Session expired. Please log in again.");
         table.innerHTML = "";
+        loadStudents();
         return;
     }
 

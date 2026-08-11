@@ -2,6 +2,7 @@ require("dotenv").config();
 const express = require("express");
 const cors = require("cors");
 const crypto = require("crypto");
+const jwt = require("jsonwebtoken");
 const { PrismaClient } = require("@prisma/client");
 const app = express();
 app.set("etag", false);
@@ -59,15 +60,47 @@ function getTodayKeyIST() {
 app.use(cors());
 app.use(express.json());
 
-// Blocks direct access to student data unless the correct key is sent.
-// admin.html sends this automatically once you enter the password there.
+// Student logs in with the admin password ONCE here, and gets back a
+// signed token that expires after 6 hours — instead of the raw password
+// being sent (and compared) on every single request from here on.
+app.post("/admin/login", (req, res) => {
+
+    const { password } = req.body;
+
+    if (!password || password !== process.env.ADMIN_KEY) {
+        return res.status(401).json({ message: "Incorrect admin password." });
+    }
+
+    const token = jwt.sign(
+        { role: "admin" },
+        process.env.JWT_SECRET,
+        { expiresIn: "6h" }
+    );
+
+    res.json({ token });
+
+});
+
+// Blocks direct access to student data unless a valid, non-expired
+// admin token is sent. admin.html gets this token once from
+// /admin/login, then sends it on every request via the Authorization
+// header — the server never has to see the actual password again.
 function requireAdminKey(req, res, next) {
-    const key = req.headers["x-admin-key"];
-    console.log("DEBUG -> received key:", JSON.stringify(key), "| expected:", JSON.stringify(process.env.ADMIN_KEY));
-    if (key !== process.env.ADMIN_KEY) {
+
+    const authHeader = req.headers["authorization"] || "";
+    const token = authHeader.startsWith("Bearer ") ? authHeader.slice(7) : null;
+
+    if (!token) {
         return res.status(401).json({ message: "Unauthorized" });
     }
-    next();
+
+    try {
+        jwt.verify(token, process.env.JWT_SECRET);
+        next();
+    } catch (error) {
+        return res.status(401).json({ message: "Session expired. Please log in again." });
+    }
+
 }
 
 app.get("/", (req, res) => {
