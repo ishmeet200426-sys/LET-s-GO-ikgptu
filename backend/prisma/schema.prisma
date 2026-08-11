@@ -6,35 +6,32 @@ datasource db {
   provider = "postgresql"
   url      = env("DATABASE_URL")
 }
+
 model Student {
   id            Int      @id @default(autoincrement())
   name          String
   phone         String   @unique
-  email         String   @unique
   category      String
   course        String
   batch         String
-  emailVerified Boolean  @default(true)
   createdAt     DateTime @default(now())
+  email         String   @unique
+  emailVerified Boolean  @default(true)
 }
 
 model PendingRegistration {
-  id            Int      @id @default(autoincrement())
-  name          String
-  phone         String   @unique
-  email         String   @unique
-  category      String
-  course        String
-  batch         String
-  otpHash       String
-  otpExpiry     DateTime
-  createdAt     DateTime @default(now())
+  id        Int      @id @default(autoincrement())
+  name      String
+  phone     String   @unique
+  email     String   @unique
+  category  String
+  course    String
+  batch     String
+  otpHash   String
+  otpExpiry DateTime
+  createdAt DateTime @default(now())
 }
 
-// Tracks how many OTP emails have been sent per day, so we can stay
-// safely under Brevo's free-tier 300/day limit. One row per calendar
-// date (e.g. "2026-08-13"), incremented every time an OTP actually
-// gets sent successfully.
 model OtpUsage {
   date  String @id
   count Int    @default(0)
