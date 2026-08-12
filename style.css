@@ -433,7 +433,6 @@ h1, h2 {
     align-items: center;
     gap: 12px;
     padding: 12px 10px 12px 16px;
-    cursor: pointer;
 }
 
 .directions-icon {
@@ -524,8 +523,18 @@ h1, h2 {
     display: flex;
 }
 
-/* --- Full directions bottom sheet (opened from the compact card) --- */
+/* --- Full directions bottom sheet --- */
+/* DISABLED FOR DEMO: the expand-to-sheet button no longer opens this
+   (see index.html), and it's force-hidden here as a safety net so it
+   can never appear or get stuck open during the presentation, even if
+   something else in the code tries to trigger it. The compact
+   .directions-card above is the sole live-updating directions UI for
+   now. Remove this override once the sheet's close button is properly
+   debugged after the demo. */
 .directions-sheet {
+    display: none !important;
+}
+.directions-sheet-legacy-layout {
     position: absolute;
     left: 0;
     right: 0;
