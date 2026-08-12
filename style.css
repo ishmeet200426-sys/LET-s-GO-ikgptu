@@ -57,6 +57,16 @@ h1, h2 {
        show and hide while scrolling. */
     height: clamp(420px, 78dvh, 700px);
     touch-action: none;
+    /* Leaflet's internal panes/controls use z-index values up to 1000+
+       internally. Without `isolation`, those internal values compete
+       directly with our own overlay UI's z-index (directions card,
+       sheet, FABs) in the same global stacking order — which is how a
+       map layer ended up capturing clicks meant for the close button
+       sitting visually on top of it. isolate confines everything
+       Leaflet draws to its own self-contained layer, so our overlay
+       elements (all positioned as siblings of #map) reliably sit above
+       it regardless of what z-index Leaflet uses internally. */
+    isolation: isolate;
 }
 /* Search Box */
 .search-box {

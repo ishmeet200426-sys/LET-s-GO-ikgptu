@@ -5,7 +5,7 @@
 // IMPORTANT: bump this version number any time you change index.html,
 // script.js, style.css, or other cached files. Otherwise returning
 // visitors will keep seeing an old frozen copy forever.
-const CACHE_NAME = "campus-nav-v8";
+const CACHE_NAME = "campus-nav-v9";
 
 const FILES_TO_CACHE = [
     "./",
