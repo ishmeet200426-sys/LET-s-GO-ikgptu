@@ -220,7 +220,7 @@
         <div id="directionsCard" class="directions-card">
             <div class="directions-card-main">
                 <span id="directionsIcon" class="directions-icon">⬆️</span>
-                <div class="directions-text" id="directionsExpandBtn">
+                <div class="directions-text" id="directionsExpandBtn" onclick="openDirectionsSheet()">
                     <div id="directionsInstruction" class="directions-instruction">Continue straight</div>
                     <div class="directions-meta">
                         <span id="directionsDistance">-- m</span>
@@ -228,7 +228,7 @@
                         <span id="directionsSummaryText"></span>
                     </div>
                 </div>
-                <button id="directionsMinimizeBtn" class="directions-minimize-btn" title="Minimize">⌄</button>
+                <button id="directionsMinimizeBtn" class="directions-minimize-btn" title="Minimize" onclick="toggleDirectionsMinimized()">⌄</button>
             </div>
         </div>
 
@@ -240,7 +240,7 @@
         <!-- Full step-by-step list, opened from the directions card -->
         <div id="directionsSheet" class="directions-sheet">
             <div class="building-panel-handle"></div>
-            <button id="directionsSheetClose" class="building-panel-close">✕</button>
+            <button id="directionsSheetClose" class="building-panel-close" onclick="closeDirectionsSheet()">✕</button>
             <h2 class="directions-sheet-title">Directions</h2>
             <div id="directionsStepsList" class="directions-steps-list"></div>
         </div>

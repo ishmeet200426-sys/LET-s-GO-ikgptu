@@ -1373,25 +1373,18 @@ function closeDirectionsSheet() {
 
 document.addEventListener("DOMContentLoaded", () => {
 
-    const minimizeBtn = document.getElementById("directionsMinimizeBtn");
-    if (minimizeBtn) minimizeBtn.addEventListener("click", toggleDirectionsMinimized);
-
-    const expandBtn = document.getElementById("directionsExpandBtn");
-    if (expandBtn) expandBtn.addEventListener("click", openDirectionsSheet);
-
-    const closeSheetBtn = document.getElementById("directionsSheetClose");
-    if (closeSheetBtn) closeSheetBtn.addEventListener("click", closeDirectionsSheet);
-
     const recenterBtn = document.getElementById("recenterBtn");
-    if (recenterBtn) recenterBtn.addEventListener("click", () => {
-        isFollowingUser = true;
-        hideRecenterBtn();
-        if (userLocation) {
-            map.setView(userLocation, Math.max(map.getZoom(), 18), { animate: true });
-        }
-    });
+    if (recenterBtn) recenterBtn.addEventListener("click", recenterMap);
 
 });
+
+function recenterMap() {
+    isFollowingUser = true;
+    hideRecenterBtn();
+    if (window.userMarker) {
+        map.setView(window.userMarker.getLatLng(), Math.max(map.getZoom(), 18), { animate: true });
+    }
+}
 // ===== One-click Install (Android/Chrome) =====
 let deferredInstallPrompt = null;
 
