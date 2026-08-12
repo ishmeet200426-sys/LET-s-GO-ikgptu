@@ -1,5 +1,46 @@
 // Create the map
-var map = L.map('map').setView([31.3529, 75.4595], 17);
+// minZoom/maxZoom + maxBounds keep the map "pinned" to campus — without
+// these, a stray pinch gesture can zoom all the way out to the whole
+// world or in past useful detail, which felt like the map "flying away".
+// maxBoundsViscosity makes the edge feel like a soft wall instead of a
+// hard stop, so it doesn't feel broken when you reach it.
+var CAMPUS_BOUNDS = L.latLngBounds(
+    [31.3450, 75.4480],
+    [31.3600, 75.4700]
+);
+
+var map = L.map('map', {
+    minZoom: 15,
+    maxZoom: 19,
+    maxBounds: CAMPUS_BOUNDS,
+    maxBoundsViscosity: 1.0,
+    // Leaflet already handles pinch/drag itself — telling the browser not
+    // to also try to pan/zoom the page underneath it stops the map from
+    // visually "jumping" when a touch gesture starts.
+    tap: true
+}).setView([31.3529, 75.4595], 17);
+
+// Keep Leaflet's internal size calculation in sync any time the layout
+// actually changes size (address bar show/hide, rotation, etc.) — this
+// is what used to make the map look like it was drifting/shifting.
+window.addEventListener('resize', () => map.invalidateSize());
+window.addEventListener('orientationchange', () => setTimeout(() => map.invalidateSize(), 250));
+
+// ===== Follow-mode for live tracking =====
+// While navigating, the map auto-pans to follow the user. But if the
+// user manually drags/pinches the map (e.g. to look ahead), that
+// auto-pan should NOT immediately yank the view back — that's what
+// made the map feel like it was "shifting on its own" under their
+// finger. Follow mode pauses on manual interaction and a small
+// recenter button brings it back.
+let isFollowingUser = false;
+
+map.on('dragstart', () => {
+    if (isFollowingUser) {
+        isFollowingUser = false;
+        showRecenterBtn();
+    }
+});
 
 // Small helper: delays calling fn until `wait` ms after the last call —
 // used so we don't hit the OSRM routing service on every single keystroke
@@ -731,6 +772,10 @@ function startLiveTracking() {
         return;
     }
 
+    // Navigation just (re)started — resume following the user
+    isFollowingUser = true;
+    hideRecenterBtn();
+
     watchId = navigator.geolocation.watchPosition(
 
         function(position) {
@@ -754,11 +799,15 @@ function startLiveTracking() {
                 animateMarkerTo(window.userMarker, newLatLng, duration);
 
                 // Pan the map in step with the marker's glide, rather
-                // than jumping the view instantly
-                map.panTo(newLatLng, {
-                    animate: true,
-                    duration: duration / 1000
-                });
+                // than jumping the view instantly — but only while we're
+                // actually in follow mode, so it doesn't fight the user
+                // if they've manually panned/zoomed to look around.
+                if (isFollowingUser) {
+                    map.panTo(newLatLng, {
+                        animate: true,
+                        duration: duration / 1000
+                    });
+                }
 
             } else {
 
@@ -852,6 +901,18 @@ function stopLiveTracking() {
         navigator.geolocation.clearWatch(watchId);
         watchId = null;
     }
+    isFollowingUser = false;
+    hideRecenterBtn();
+}
+
+function showRecenterBtn() {
+    const btn = document.getElementById("recenterBtn");
+    if (btn) btn.classList.add("visible");
+}
+
+function hideRecenterBtn() {
+    const btn = document.getElementById("recenterBtn");
+    if (btn) btn.classList.remove("visible");
 }
 
 
@@ -899,7 +960,11 @@ function navigateTo(lat, lng, destinationLocation) {
             draggableWaypoints: false,
             addWaypoints: false,
 
-            // Keep the turn-by-turn instructions panel visible and open
+            // We build our own compact directions card (see below) instead
+            // of the default Leaflet panel, which was a big, always-open
+            // list that ate a lot of the map. The default container is
+            // hidden with CSS but Leaflet still needs `show:true`/
+            // `collapsible:false` internally to keep computing instructions.
             collapsible: false,
             show: true,
 
@@ -911,7 +976,10 @@ function navigateTo(lat, lng, destinationLocation) {
 
         // Hide the loading indicator once the route actually arrives —
         // or if OSRM fails, so it never gets stuck showing forever
-        routingControl.on("routesfound", hideRouteLoading);
+        routingControl.on("routesfound", (e) => {
+            hideRouteLoading();
+            renderDirections(e.routes[0]);
+        });
         routingControl.on("routingerror", () => {
             hideRouteLoading();
             console.log("Routing error — showing whatever route state is available.");
@@ -1176,7 +1244,154 @@ function cancelNavigation() {
     // Stop following the user's live position once navigation ends
     stopLiveTracking();
 
+    hideDirections();
+
 }
+
+// ===== Compact turn-by-turn directions card =====
+// Replaces Leaflet Routing Machine's default panel — that panel is a
+// permanently-open list of every step, which is big enough to cover
+// most of the map. This shows just the next step (icon + instruction +
+// distance) in a small card that sits in the empty space at the top of
+// the map, with a minimize toggle and an expand-to-full-list option.
+
+let allDirectionSteps = [];
+let directionsMinimized = false;
+
+// Maps OSRM/Leaflet instruction types to a simple arrow/icon so the
+// card reads at a glance instead of needing to parse a sentence.
+function iconForInstruction(instruction) {
+
+    const type = (instruction.type || "").toLowerCase();
+    const modifier = (instruction.modifier || "").toLowerCase();
+    const text = (instruction.text || "").toLowerCase();
+    const combined = type + " " + modifier + " " + text;
+
+    if (combined.includes("depart") || combined.includes("head")) return "🏁";
+    if (combined.includes("arrive") || combined.includes("destination")) return "🎉";
+    if (combined.includes("roundabout")) return "🔄";
+    if (combined.includes("sharp left")) return "↰";
+    if (combined.includes("sharp right")) return "↱";
+    if (combined.includes("slight left")) return "↖️";
+    if (combined.includes("slight right")) return "↗️";
+    if (combined.includes("left")) return "⬅️";
+    if (combined.includes("right")) return "➡️";
+    if (combined.includes("uturn") || combined.includes("u-turn") || combined.includes("turn around")) return "↩️";
+    if (combined.includes("straight") || combined.includes("continue")) return "⬆️";
+
+    return "⬆️";
+
+}
+
+// "734" -> "730 m", "1834" -> "1.8 km"
+function formatDistance(meters) {
+    if (meters == null) return "";
+    if (meters >= 1000) return (meters / 1000).toFixed(1) + " km";
+    return Math.round(meters / 10) * 10 + " m";
+}
+
+function renderDirections(route) {
+
+    if (!route || !route.instructions || route.instructions.length === 0) return;
+
+    allDirectionSteps = route.instructions;
+
+    const card = document.getElementById("directionsCard");
+    if (!card) return;
+    card.classList.add("visible");
+
+    updateCurrentStep(0);
+
+    // Total distance/time summary, shown in both the compact and
+    // minimized states
+    const totalDistance = formatDistance(route.summary && route.summary.totalDistance);
+    const totalMinutes = route.summary ? Math.max(1, Math.round(route.summary.totalTime / 60)) : null;
+    const summaryEl = document.getElementById("directionsSummaryText");
+    if (summaryEl) {
+        summaryEl.textContent = totalMinutes
+            ? `${totalDistance} · ${totalMinutes} min`
+            : totalDistance;
+    }
+
+    // Full step list, for the "view all steps" expanded sheet
+    const list = document.getElementById("directionsStepsList");
+    if (list) {
+        list.innerHTML = "";
+        route.instructions.forEach((step, i) => {
+            const row = document.createElement("div");
+            row.className = "directions-step-row";
+            row.innerHTML = `
+                <span class="directions-step-row-icon">${iconForInstruction(step)}</span>
+                <span class="directions-step-row-text">${step.text || "Continue"}</span>
+                <span class="directions-step-row-distance">${formatDistance(step.distance)}</span>
+            `;
+            list.appendChild(row);
+        });
+    }
+
+}
+
+function updateCurrentStep(index) {
+
+    if (!allDirectionSteps[index]) return;
+
+    const step = allDirectionSteps[index];
+
+    const iconEl = document.getElementById("directionsIcon");
+    const textEl = document.getElementById("directionsInstruction");
+    const distEl = document.getElementById("directionsDistance");
+
+    if (iconEl) iconEl.textContent = iconForInstruction(step);
+    if (textEl) textEl.textContent = step.text || "Continue";
+    if (distEl) distEl.textContent = formatDistance(step.distance);
+
+}
+
+function hideDirections() {
+    const card = document.getElementById("directionsCard");
+    if (card) card.classList.remove("visible");
+    const sheet = document.getElementById("directionsSheet");
+    if (sheet) sheet.classList.remove("open");
+    allDirectionSteps = [];
+}
+
+function toggleDirectionsMinimized() {
+    directionsMinimized = !directionsMinimized;
+    const card = document.getElementById("directionsCard");
+    if (card) card.classList.toggle("minimized", directionsMinimized);
+}
+
+function openDirectionsSheet() {
+    const sheet = document.getElementById("directionsSheet");
+    if (sheet) sheet.classList.add("open");
+}
+
+function closeDirectionsSheet() {
+    const sheet = document.getElementById("directionsSheet");
+    if (sheet) sheet.classList.remove("open");
+}
+
+document.addEventListener("DOMContentLoaded", () => {
+
+    const minimizeBtn = document.getElementById("directionsMinimizeBtn");
+    if (minimizeBtn) minimizeBtn.addEventListener("click", toggleDirectionsMinimized);
+
+    const expandBtn = document.getElementById("directionsExpandBtn");
+    if (expandBtn) expandBtn.addEventListener("click", openDirectionsSheet);
+
+    const closeSheetBtn = document.getElementById("directionsSheetClose");
+    if (closeSheetBtn) closeSheetBtn.addEventListener("click", closeDirectionsSheet);
+
+    const recenterBtn = document.getElementById("recenterBtn");
+    if (recenterBtn) recenterBtn.addEventListener("click", () => {
+        isFollowingUser = true;
+        hideRecenterBtn();
+        if (userLocation) {
+            map.setView(userLocation, Math.max(map.getZoom(), 18), { animate: true });
+        }
+    });
+
+});
 // ===== One-click Install (Android/Chrome) =====
 let deferredInstallPrompt = null;
 

@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>Smart Campus Navigation</title>
 
     <!-- Registration gate: send unregistered visitors to login.html first.
@@ -211,6 +211,38 @@
         <div id="routeLoadingIndicator" class="route-loading-indicator">
             <span class="route-loading-spinner"></span>
             <span id="routeLoadingText">Finding your location...</span>
+        </div>
+
+        <!-- Compact turn-by-turn directions card: sits in the empty space
+             at the top of the map instead of the old full-height list.
+             Tap the chevron to shrink it to a thin bar; tap the card
+             itself to see every step in a bottom sheet. -->
+        <div id="directionsCard" class="directions-card">
+            <div class="directions-card-main">
+                <span id="directionsIcon" class="directions-icon">⬆️</span>
+                <div class="directions-text" id="directionsExpandBtn">
+                    <div id="directionsInstruction" class="directions-instruction">Continue straight</div>
+                    <div class="directions-meta">
+                        <span id="directionsDistance">-- m</span>
+                        <span class="directions-meta-dot">·</span>
+                        <span id="directionsSummaryText"></span>
+                    </div>
+                </div>
+                <button id="directionsMinimizeBtn" class="directions-minimize-btn" title="Minimize">⌄</button>
+            </div>
+        </div>
+
+        <!-- Recenter button: appears when the user pans/zooms away from
+             their own position during navigation, so the map doesn't
+             fight their touch by auto-recentering underneath it. -->
+        <button id="recenterBtn" type="button" class="fab recenter-fab" title="Recenter">🎯</button>
+
+        <!-- Full step-by-step list, opened from the directions card -->
+        <div id="directionsSheet" class="directions-sheet">
+            <div class="building-panel-handle"></div>
+            <button id="directionsSheetClose" class="building-panel-close">✕</button>
+            <h2 class="directions-sheet-title">Directions</h2>
+            <div id="directionsStepsList" class="directions-steps-list"></div>
         </div>
 
         <!-- Floating action buttons -->
