@@ -43,11 +43,20 @@ h1, h2 {
 /* Map container */
 .map-wrapper {
     position: relative;
+    /* Prevents the browser's own overscroll/bounce from fighting
+       Leaflet's touch handling, which was part of what made the map
+       feel like it was "jumping" on touch. */
+    overscroll-behavior: contain;
 }
 
 #map {
     width: 100%;
-    height: 600px;
+    /* clamp() keeps the map tall enough to be useful but never taller
+       than the viewport allows, and dvh (not vh) accounts for mobile
+       browser chrome so the map doesn't resize/shift as address bars
+       show and hide while scrolling. */
+    height: clamp(420px, 78dvh, 700px);
+    touch-action: none;
 }
 /* Search Box */
 .search-box {
@@ -379,22 +388,206 @@ h1, h2 {
    Turn-by-turn Directions Panel
 ========================= */
 
+/* Leaflet Routing Machine's own panel is replaced by our compact
+   .directions-card + .directions-sheet below — it used to take up a
+   big chunk of the map permanently. It's kept in the DOM (Leaflet
+   needs it internally) but never shown. */
 .leaflet-routing-container {
-    max-width: 320px;
-    max-height: 400px;
-    overflow-y: auto;
+    display: none !important;
+}
+
+/* --- Compact "next turn" directions card --- */
+.directions-card {
+    position: absolute;
+    top: 16px;
+    left: 16px;
+    right: 16px;
+    max-width: 420px;
+    margin: 0 auto;
+    z-index: 900;
+    pointer-events: auto;
+    background: white;
+    border-radius: 14px;
+    box-shadow: 0 4px 16px rgba(0,0,0,0.22);
+    display: none;
+    overflow: hidden;
+    transition: padding 0.2s ease;
+}
+
+.directions-card.visible {
+    display: block;
+}
+
+.directions-card-main {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 12px 10px 12px 16px;
+    cursor: pointer;
+}
+
+.directions-icon {
+    font-size: 26px;
+    flex-shrink: 0;
+    width: 34px;
+    text-align: center;
+}
+
+.directions-text {
+    flex: 1;
+    min-width: 0;
+}
+
+.directions-instruction {
+    font-weight: 600;
     font-size: 15px;
-    padding: 10px;
-    border-radius: 8px;
-    box-shadow: 0 2px 10px rgba(0,0,0,0.2);
+    color: #212529;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
 }
 
-.leaflet-routing-alt h2 {
+.directions-meta {
+    font-size: 13px;
+    color: #6c757d;
+    margin-top: 2px;
+}
+
+.directions-meta-dot {
+    margin: 0 5px;
+}
+
+.directions-minimize-btn {
+    flex-shrink: 0;
+    width: 30px;
+    height: 30px;
+    border-radius: 50%;
+    border: none;
+    background: #f1f3f5;
+    color: #495057;
     font-size: 16px;
+    cursor: pointer;
+    transition: transform 0.2s ease;
 }
 
-.leaflet-routing-alt h3 {
+.directions-minimize-btn:hover {
+    background: #e9ecef;
+}
+
+/* Minimized: shrinks to a thin bar so it stops covering the map,
+   while staying visible so it's never fully "lost" */
+.directions-card.minimized .directions-icon {
+    font-size: 18px;
+    width: 22px;
+}
+
+.directions-card.minimized .directions-instruction {
+    font-size: 13px;
+}
+
+.directions-card.minimized .directions-meta {
+    display: none;
+}
+
+.directions-card.minimized .directions-card-main {
+    padding: 6px 8px 6px 12px;
+    gap: 8px;
+}
+
+.directions-card.minimized .directions-minimize-btn {
+    transform: rotate(180deg);
+}
+
+/* --- Recenter button: only appears once the user pans away
+   from live-follow mode --- */
+.recenter-fab {
+    /* Left side, clear of the location/admin/install FABs on the right */
+    left: 16px;
+    right: auto;
+    bottom: 20px;
+    background: white;
+    color: #0d6efd;
+    display: none;
+}
+
+.recenter-fab.visible {
+    display: flex;
+}
+
+/* --- Full directions bottom sheet (opened from the compact card) --- */
+.directions-sheet {
+    position: absolute;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    max-height: 55%;
+    background: white;
+    border-radius: 18px 18px 0 0;
+    box-shadow: 0 -6px 24px rgba(0,0,0,0.2);
+    z-index: 950;
+    pointer-events: auto;
+    padding: 10px 16px 16px 16px;
+    transform: translateY(100%);
+    transition: transform 0.3s ease;
+    overflow-y: auto;
+}
+
+.directions-sheet.open {
+    transform: translateY(0);
+}
+
+.directions-sheet-title {
+    font-family: 'Poppins', sans-serif;
+    font-size: 18px;
+    margin: 4px 0 10px 0;
+    padding-right: 30px;
+}
+
+.directions-steps-list {
+    display: flex;
+    flex-direction: column;
+}
+
+.directions-step-row {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 10px 0;
+    border-top: 1px solid #f1f3f5;
     font-size: 14px;
+}
+
+.directions-step-row:first-child {
+    border-top: none;
+}
+
+.directions-step-row-icon {
+    font-size: 18px;
+    width: 24px;
+    text-align: center;
+    flex-shrink: 0;
+}
+
+.directions-step-row-text {
+    flex: 1;
+    color: #212529;
+}
+
+.directions-step-row-distance {
+    color: #6c757d;
+    flex-shrink: 0;
+    white-space: nowrap;
+}
+
+@media (min-width: 768px) {
+    .directions-sheet {
+        left: auto;
+        right: 16px;
+        bottom: 16px;
+        width: 340px;
+        max-height: 60%;
+        border-radius: 16px;
+    }
 }
 
 /* =========================
