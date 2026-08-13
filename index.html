@@ -220,17 +220,29 @@
         <div id="directionsCard" class="directions-card">
             <div class="directions-card-main">
                 <span id="directionsIcon" class="directions-icon">⬆️</span>
-                <div class="directions-text" id="directionsExpandBtn" onclick="openDirectionsSheet()">
-                    <div id="directionsInstruction" class="directions-instruction">Continue straight</div>
-                    <div class="directions-meta">
+
+                <!-- The whole text area opens the complete turn-by-turn sheet. -->
+                <button id="directionsExpandBtn" class="directions-text directions-expand-btn"
+                        type="button" title="View all directions">
+                    <span id="directionsInstruction" class="directions-instruction">Continue straight</span>
+                    <span class="directions-meta">
                         <span id="directionsDistance">-- m</span>
                         <span class="directions-meta-dot">·</span>
                         <span id="directionsSummaryText"></span>
-                    </div>
-                </div>
-                <button id="directionsMinimizeBtn" class="directions-minimize-btn" title="Minimize" onclick="toggleDirectionsMinimized()">⌄</button>
+                    </span>
+                </button>
+
+                <button id="directionsMinimizeBtn" class="directions-minimize-btn"
+                        type="button" title="Minimize" aria-label="Minimize directions">⌄</button>
+
+                <button id="directionsCloseBtn" class="directions-close-btn"
+                        type="button" title="Close directions" aria-label="Close directions">✕</button>
             </div>
         </div>
+
+        <!-- Small reopen button shown after the directions card is closed. -->
+        <button id="directionsReopenBtn" type="button" class="directions-reopen-btn"
+                title="Show directions" aria-label="Show directions">🧭</button>
 
         <!-- Recenter button: appears when the user pans/zooms away from
              their own position during navigation, so the map doesn't
@@ -240,7 +252,7 @@
         <!-- Full step-by-step list, opened from the directions card -->
         <div id="directionsSheet" class="directions-sheet">
             <div class="building-panel-handle"></div>
-            <button id="directionsSheetClose" class="building-panel-close" onclick="closeDirectionsSheet()">✕</button>
+            <button id="directionsSheetClose" class="building-panel-close" type="button" aria-label="Close directions">✕</button>
             <h2 class="directions-sheet-title">Directions</h2>
             <div id="directionsStepsList" class="directions-steps-list"></div>
         </div>

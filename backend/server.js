@@ -3,6 +3,7 @@ const express = require("express");
 const cors = require("cors");
 const crypto = require("crypto");
 const jwt = require("jsonwebtoken");
+const bcrypt = require("bcryptjs");
 const { PrismaClient } = require("@prisma/client");
 const app = express();
 app.set("etag", false);
@@ -118,7 +119,7 @@ app.get("/", (req, res) => {
 });
 app.post("/send-otp", async (req, res) => {
     try {
-        const { name, phone, email, category, course, batch } = req.body;
+        const { name, phone, email, category, course, batch, password } = req.body;
 
         // 1. Check that every registration field was provided
         if (!name || !phone || !email || !category || !course || !batch) {
@@ -126,7 +127,11 @@ app.post("/send-otp", async (req, res) => {
                 message: "All fields are required."
             });
         }
-
+    if (!password || password.length < 8) {
+    return res.status(400).json({
+        message: "Password must be at least 8 characters long."
+    });
+}
         // 1b. Phone must be exactly 10 digits, starting with 6-9 (valid
         // Indian mobile format). This is the check that actually matters —
         // the frontend one can always be bypassed by calling the API directly.
@@ -252,19 +257,23 @@ app.post("/send-otp", async (req, res) => {
             Date.now() + 10 * 60 * 1000
         );
 
-        // 9. Store the pending registration
-        await prisma.pendingRegistration.create({
-            data: {
-                name,
-                phone,
-                email,
-                category,
-                course,
-                batch,
-                otpHash,
-                otpExpiry
-            }
-        });
+        // 9. Hash the password before storing it
+const passwordHash = await bcrypt.hash(password, 12);
+
+// 10. Store the pending registration
+await prisma.pendingRegistration.create({
+    data: {
+        name,
+        phone,
+        email,
+        category,
+        course,
+        batch,
+        passwordHash,
+        otpHash,
+        otpExpiry
+    }
+});
 
         // 10. Send the OTP through Brevo's HTTP API
         await sendBrevoEmail({
@@ -368,20 +377,25 @@ app.post("/verify-otp", async (req, res) => {
         });
 
         const student = existingUnverified
-            ? await prisma.student.update({
-                where: { id: existingUnverified.id },
-                data: { emailVerified: true }
-            })
-            : await prisma.student.create({
-                data: {
-                    name: pending.name,
-                    phone: pending.phone,
-                    email: pending.email,
-                    category: pending.category,
-                    course: pending.course,
-                    batch: pending.batch
-                }
-            });
+    ? await prisma.student.update({
+        where: { id: existingUnverified.id },
+        data: {
+            emailVerified: true,
+            passwordHash: pending.passwordHash
+        }
+    })
+    : await prisma.student.create({
+        data: {
+            name: pending.name,
+            phone: pending.phone,
+            email: pending.email,
+            category: pending.category,
+            course: pending.course,
+            batch: pending.batch,
+            passwordHash: pending.passwordHash,
+            emailVerified: true
+        }
+    });
 
         // 7. Delete the temporary registration
         await prisma.pendingRegistration.delete({
@@ -448,7 +462,88 @@ app.post("/register", async (req, res) => {
         message: "Server Error"
     });
 }
+}); 
+// STUDENT LOGIN
+app.post("/student-login", async (req, res) => {
+    try {
+        const { email, password } = req.body;
+
+        // 1. Check required fields
+        if (!email || !password) {
+            return res.status(400).json({
+                message: "Email and password are required."
+            });
+        }
+
+        // 2. Find the student by email
+        const student = await prisma.student.findUnique({
+            where: {
+                email: email
+            }
+        });
+
+        // 3. Don't reveal whether the email exists
+        if (!student) {
+            return res.status(401).json({
+                message: "Invalid email or password."
+            });
+        }
+
+        // 4. Student must have completed email verification
+        if (!student.emailVerified) {
+            return res.status(403).json({
+                message: "Please complete email verification first."
+            });
+        }
+
+        // 5. Compare entered password with stored bcrypt hash
+        const passwordCorrect = await bcrypt.compare(
+            password,
+            student.passwordHash
+        );
+
+        if (!passwordCorrect) {
+            return res.status(401).json({
+                message: "Invalid email or password."
+            });
+        }
+
+        // 6. Create JWT for the student
+        const token = jwt.sign(
+            {
+                studentId: student.id,
+                email: student.email,
+                role: "student"
+            },
+            process.env.JWT_SECRET,
+            {
+                expiresIn: "7d"
+            }
+        );
+
+        // 7. Successful login
+        res.json({
+            message: "Login successful.",
+            token,
+            student: {
+                id: student.id,
+                name: student.name,
+                email: student.email,
+                category: student.category,
+                course: student.course,
+                batch: student.batch
+            }
+        });
+
+    } catch (error) {
+        console.log("Student login error:", error);
+
+        res.status(500).json({
+            message: "Unable to login."
+        });
+    }
 });
+ 
 app.get("/students", requireAdminKey, async (req, res) => {
 
     // Never let the browser cache this — old cached responses could

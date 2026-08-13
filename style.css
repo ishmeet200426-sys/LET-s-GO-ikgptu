@@ -1,3 +1,4 @@
+
 /* Remove default margin and padding */
 body {
     margin: 0;
@@ -57,6 +58,16 @@ h1, h2 {
        show and hide while scrolling. */
     height: clamp(420px, 78dvh, 700px);
     touch-action: none;
+    /* Leaflet's internal panes/controls use z-index values up to 1000+
+       internally. Without `isolation`, those internal values compete
+       directly with our own overlay UI's z-index (directions card,
+       sheet, FABs) in the same global stacking order — which is how a
+       map layer ended up capturing clicks meant for the close button
+       sitting visually on top of it. isolate confines everything
+       Leaflet draws to its own self-contained layer, so our overlay
+       elements (all positioned as siblings of #map) reliably sit above
+       it regardless of what z-index Leaflet uses internally. */
+    isolation: isolate;
 }
 /* Search Box */
 .search-box {
@@ -402,6 +413,7 @@ h1, h2 {
     top: 16px;
     left: 16px;
     right: 16px;
+    width: min(calc(100% - 32px), 420px);
     max-width: 420px;
     margin: 0 auto;
     z-index: 900;
@@ -423,7 +435,6 @@ h1, h2 {
     align-items: center;
     gap: 12px;
     padding: 12px 10px 12px 16px;
-    cursor: pointer;
 }
 
 .directions-icon {
@@ -436,6 +447,71 @@ h1, h2 {
 .directions-text {
     flex: 1;
     min-width: 0;
+}
+
+/* Make the clickable instruction area look like normal card content. */
+.directions-expand-btn {
+    display: block;
+    width: 100%;
+    padding: 0;
+    margin: 0;
+    border: 0;
+    background: transparent;
+    text-align: left;
+    font: inherit;
+    cursor: pointer;
+    color: inherit;
+}
+
+.directions-expand-btn:focus-visible,
+.directions-minimize-btn:focus-visible,
+.directions-close-btn:focus-visible,
+.directions-reopen-btn:focus-visible {
+    outline: 2px solid #0d6efd;
+    outline-offset: 2px;
+}
+
+.directions-close-btn {
+    flex-shrink: 0;
+    width: 30px;
+    height: 30px;
+    border: 0;
+    border-radius: 50%;
+    background: #f1f3f5;
+    color: #495057;
+    font-size: 14px;
+    cursor: pointer;
+}
+
+.directions-close-btn:hover {
+    background: #e9ecef;
+}
+
+/* Reopen control appears only after the user closes the card. */
+.directions-reopen-btn {
+    position: absolute;
+    top: 16px;
+    left: 16px;
+    z-index: 901;
+    width: 46px;
+    height: 46px;
+    border: 0;
+    border-radius: 50%;
+    background: white;
+    box-shadow: 0 4px 16px rgba(0,0,0,0.22);
+    display: none;
+    align-items: center;
+    justify-content: center;
+    font-size: 21px;
+    cursor: pointer;
+}
+
+.directions-reopen-btn.visible {
+    display: flex;
+}
+
+.directions-card.closed {
+    display: none;
 }
 
 .directions-instruction {
@@ -514,8 +590,36 @@ h1, h2 {
     display: flex;
 }
 
-/* --- Full directions bottom sheet (opened from the compact card) --- */
+/* --- Full directions bottom sheet --- */
+/* DISABLED FOR DEMO: the expand-to-sheet button no longer opens this
+   (see index.html), and it's force-hidden here as a safety net so it
+   can never appear or get stuck open during the presentation, even if
+   something else in the code tries to trigger it. The compact
+   .directions-card above is the sole live-updating directions UI for
+   now. Remove this override once the sheet's close button is properly
+   debugged after the demo. */
 .directions-sheet {
+    position: absolute;
+    left: 16px;
+    right: 16px;
+    bottom: 16px;
+    max-height: min(60%, 560px);
+    background: white;
+    border-radius: 18px;
+    box-shadow: 0 -4px 24px rgba(0,0,0,0.22);
+    z-index: 950;
+    pointer-events: none;
+    padding: 10px 16px 16px 16px;
+    transform: translateY(calc(100% + 24px));
+    transition: transform 0.25s ease;
+    overflow-y: auto;
+}
+
+.directions-sheet.open {
+    transform: translateY(0);
+    pointer-events: auto;
+}
+.directions-sheet-legacy-layout {
     position: absolute;
     left: 0;
     right: 0;
@@ -1029,5 +1133,80 @@ h1, h2 {
     .building-panel.open {
         transform: translateY(0);
         opacity: 1;
+    }
+}
+
+/* =========================
+   Responsive Directions Card
+========================= */
+@media (max-width: 600px) {
+    .directions-card {
+        top: 10px;
+        left: 10px;
+        right: 10px;
+        width: auto;
+        max-width: none;
+    }
+
+    .directions-card-main {
+        gap: 8px;
+        padding: 10px 8px 10px 12px;
+    }
+
+    .directions-icon {
+        font-size: 23px;
+        width: 30px;
+    }
+
+    .directions-instruction {
+        font-size: 14px;
+    }
+
+    .directions-meta {
+        font-size: 12px;
+    }
+
+    .directions-minimize-btn,
+    .directions-close-btn {
+        width: 28px;
+        height: 28px;
+    }
+
+    .directions-reopen-btn {
+        top: 10px;
+        left: 10px;
+        width: 42px;
+        height: 42px;
+    }
+
+    .directions-sheet {
+        left: 8px;
+        right: 8px;
+        bottom: 8px;
+        max-height: 68%;
+        border-radius: 16px;
+    }
+}
+
+@media (max-width: 380px) {
+    .directions-card-main {
+        gap: 5px;
+        padding-left: 8px;
+    }
+
+    .directions-icon {
+        width: 26px;
+        font-size: 21px;
+    }
+
+    .directions-instruction {
+        font-size: 13px;
+    }
+
+    .directions-minimize-btn,
+    .directions-close-btn {
+        width: 26px;
+        height: 26px;
+        font-size: 13px;
     }
 }

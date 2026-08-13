@@ -1297,10 +1297,18 @@ function renderDirections(route) {
     allDirectionSteps = route.instructions;
 
     const card = document.getElementById("directionsCard");
-    if (!card) return;
-    card.classList.add("visible");
+const reopenBtn = document.getElementById("directionsReopenBtn");
 
-    updateCurrentStep(0);
+if (!card) return;
+
+card.classList.remove("closed");
+card.classList.add("visible");
+
+if (reopenBtn) {
+    reopenBtn.classList.remove("visible");
+}
+
+updateCurrentStep(0);
 
     // Total distance/time summary, shown in both the compact and
     // minimized states
@@ -1349,21 +1357,73 @@ function updateCurrentStep(index) {
 
 function hideDirections() {
     const card = document.getElementById("directionsCard");
-    if (card) card.classList.remove("visible");
     const sheet = document.getElementById("directionsSheet");
-    if (sheet) sheet.classList.remove("open");
+    const reopenBtn = document.getElementById("directionsReopenBtn");
+
+    if (card) {
+        card.classList.remove("visible", "minimized", "closed");
+    }
+
+    if (sheet) {
+        sheet.classList.remove("open");
+    }
+
+    if (reopenBtn) {
+        reopenBtn.classList.remove("visible");
+    }
+
+    directionsMinimized = false;
     allDirectionSteps = [];
 }
 
 function toggleDirectionsMinimized() {
     directionsMinimized = !directionsMinimized;
+
     const card = document.getElementById("directionsCard");
-    if (card) card.classList.toggle("minimized", directionsMinimized);
+
+    if (card) {
+        card.classList.toggle("minimized", directionsMinimized);
+    }
+}
+function closeDirectionsCard() {
+    const card = document.getElementById("directionsCard");
+    const sheet = document.getElementById("directionsSheet");
+    const reopenBtn = document.getElementById("directionsReopenBtn");
+
+    if (card) {
+        card.classList.remove("visible", "minimized");
+        card.classList.add("closed");
+    }
+
+    if (sheet) {
+        sheet.classList.remove("open");
+    }
+
+    if (reopenBtn) {
+        reopenBtn.classList.add("visible");
+    }
+}
+
+function reopenDirectionsCard() {
+    const card = document.getElementById("directionsCard");
+    const reopenBtn = document.getElementById("directionsReopenBtn");
+
+    if (card && allDirectionSteps.length > 0) {
+        card.classList.remove("closed");
+        card.classList.add("visible");
+    }
+
+    if (reopenBtn) {
+        reopenBtn.classList.remove("visible");
+    }
 }
 
 function openDirectionsSheet() {
     const sheet = document.getElementById("directionsSheet");
-    if (sheet) sheet.classList.add("open");
+
+    if (sheet && allDirectionSteps.length > 0) {
+        sheet.classList.add("open");
+    }
 }
 
 function closeDirectionsSheet() {
@@ -1375,6 +1435,39 @@ document.addEventListener("DOMContentLoaded", () => {
 
     const recenterBtn = document.getElementById("recenterBtn");
     if (recenterBtn) recenterBtn.addEventListener("click", recenterMap);
+    const expandBtn = document.getElementById("directionsExpandBtn");
+
+if (expandBtn) {
+    expandBtn.addEventListener("click", openDirectionsSheet);
+}
+
+
+const minimizeBtn = document.getElementById("directionsMinimizeBtn");
+
+if (minimizeBtn) {
+    minimizeBtn.addEventListener("click", toggleDirectionsMinimized);
+}
+
+
+const closeBtn = document.getElementById("directionsCloseBtn");
+
+if (closeBtn) {
+    closeBtn.addEventListener("click", closeDirectionsCard);
+}
+
+
+const reopenBtn = document.getElementById("directionsReopenBtn");
+
+if (reopenBtn) {
+    reopenBtn.addEventListener("click", reopenDirectionsCard);
+}
+
+
+const sheetCloseBtn = document.getElementById("directionsSheetClose");
+
+if (sheetCloseBtn) {
+    sheetCloseBtn.addEventListener("click", closeDirectionsSheet);
+}
 
 });
 
