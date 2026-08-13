@@ -19,11 +19,7 @@
          the map. Placed early in <head> so it redirects before the form
          renders. An incognito/private tab has no localStorage carried
          over, so it will always show the form — useful for testing. -->
-    <script>
-        if (localStorage.getItem("scm_registered")) {
-            window.location.href = "index.html";
-        }
-    </script>
+    
 </head>
 <body>
 
@@ -45,37 +41,96 @@
 
 <div class="container">
 
-    <h1>🏫 Smart Campus</h1>
-    <h2>Student Registration</h2>
+    <!-- LOGIN SECTION -->
+    <div id="loginSection">
 
-    <form id="registerForm">
+        <h1>🏫 Smart Campus</h1>
+        <h2>Student Login</h2>
 
-        <label>Name</label>
-        <input
-            type="text"
-            id="name"
-            placeholder="Enter your name"
-            required
-        >
+        <p>Already registered? Login to access the Smart Campus map.</p>
 
-        <label>Phone Number</label>
-        <div class="phone-input-wrapper">
-            <span class="phone-prefix">+91</span>
+        <form id="loginForm">
+
+            <label>Email Address</label>
             <input
-                type="tel"
-                id="phone"
-                placeholder="Enter 10-digit phone number"
-                inputmode="numeric"
-                maxlength="10"
-                pattern="[6-9][0-9]{9}"
+                type="email"
+                id="loginEmail"
+                placeholder="Enter your registered email"
                 required
             >
-        </div>
+
+            <label>Password</label>
+            <input
+                type="password"
+                id="loginPassword"
+                placeholder="Enter your password"
+                required
+            >
+
+            <button type="submit">
+                Login & Continue
+            </button>
+
+        </form>
+
+        <p id="loginMessage"></p>
+
+        <button type="button" id="showRegisterBtn">
+            New Student? Register
+        </button>
+
+    </div>
+
+
+    <!-- REGISTRATION SECTION -->
+    <div id="registerSection" style="display: none;">
+
+        <h1>🏫 Smart Campus</h1>
+        <h2>Student Registration</h2>
+
+        <form id="registerForm">
+
+            <label>Name</label>
+            <input
+                type="text"
+                id="name"
+                placeholder="Enter your name"
+                required
+            >
+
+            <label>Phone Number</label>
+
+            <div class="phone-input-wrapper">
+
+                <span class="phone-prefix">+91</span>
+
+                <input
+                    type="tel"
+                    id="phone"
+                    placeholder="Enter 10-digit phone number"
+                    inputmode="numeric"
+                    maxlength="10"
+                    pattern="[6-9][0-9]{9}"
+                    required
+                >
+
+            </div>
+
+
         <label>Email Address</label>
 <input
     type="email"
     id="email"
     placeholder="Enter your email address"
+    required
+>
+<label>Password</label>
+
+<input
+    type="password"
+    id="password"
+    placeholder="Create a password (minimum 8 characters)"
+    minlength="8"
     required
 >
         <label>Category</label>
@@ -125,8 +180,16 @@
     <h2>Verify Your Email</h2>
 
     <p>
-        We've sent a 6-digit OTP to your email address.
-    </p>
+    We've sent a 6-digit OTP to:
+</p>
+
+<p>
+    <strong id="otpEmail"></strong>
+</p>
+
+<p>
+    Please check your inbox and enter the 6-digit OTP below.
+</p>
 
     <input
         type="text"
@@ -139,6 +202,9 @@
     <button type="button" id="verifyOtpBtn">
         Verify OTP
     </button>
+    <button type="button" id="backToRegistrationBtn">
+    ← Back to Registration
+</button>
 
     <p id="otpMessage"></p>
 

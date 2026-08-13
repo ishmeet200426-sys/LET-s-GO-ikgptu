@@ -339,6 +339,7 @@ app.post("/verify-otp", async (req, res) => {
                 message: "No pending registration found."
             });
         }
+        
 
         // 3. Check whether the OTP has expired
         if (new Date() > pending.otpExpiry) {

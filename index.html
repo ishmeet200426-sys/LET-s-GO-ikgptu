@@ -8,10 +8,12 @@
     <!-- Registration gate: send unregistered visitors to login.html first.
          Placed early in <head> so it redirects before the map renders. -->
     <script>
-        if (!localStorage.getItem("scm_registered")) {
-            window.location.href = "login.html";
-        }
-    </script>
+    const studentToken = localStorage.getItem("studentToken");
+
+    if (!studentToken) {
+        window.location.href = "login.html";
+    }
+</script>
 
     <!-- Fonts: Poppins for headings, Inter for body/data text -->
     <link rel="preconnect" href="https://fonts.googleapis.com">

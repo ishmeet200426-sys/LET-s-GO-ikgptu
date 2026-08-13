@@ -230,30 +230,35 @@ if (student.password !== confirmPassword) {
 
         const data = await response.json();
 
-        if (response.ok && data.alreadyRegistered) {
+      if (response.ok && data.alreadyRegistered) {
 
-            // Same phone + email as an existing verified student —
-            // this is a returning user, send them straight to the map.
-            alert("You're already registered — taking you to the map.");
-            localStorage.setItem("scm_registered", "true");
-            window.location.href = "index.html";
-            return;
+    alert("This email is already registered. Please login with your email and password.");
 
-        } else if (response.ok && data.skippedVerification) {
+    document.getElementById("loginSection").style.display = "block";
+    document.getElementById("registerSection").style.display = "none";
 
-            // Today's Brevo OTP quota is used up — the student is
-            // registered directly (unverified), so let them into the
-            // map instead of leaving them stuck at the form.
-            alert(data.message);
-            localStorage.setItem("scm_registered", "true");
-            window.location.href = "index.html";
-            return;
+    return;
+      }
 
-        } else if (response.ok) {
+else if (response.ok && data.skippedVerification) {
+
+    alert(data.message);
+
+    document.getElementById("loginSection").style.display = "block";
+    document.getElementById("registerSection").style.display = "none";
+
+    return;
+}
+
+    else if (response.ok) {
 
             // Remember which email we are verifying
             pendingEmail = student.email;
+         const otpEmail = document.getElementById("otpEmail");
 
+if (otpEmail) {
+    otpEmail.textContent = pendingEmail;
+}
             // Hide registration form
             form.style.display = "none";
 
@@ -359,3 +364,139 @@ document.getElementById("verifyOtpBtn").addEventListener("click", async function
         verifyBtn.textContent = "Verify OTP";
     }
 });
+const loginForm = document.getElementById("loginForm");
+const loginMessage = document.getElementById("loginMessage");
+const showRegisterBtn = document.getElementById("showRegisterBtn");
+
+if (loginForm) {
+
+    loginForm.addEventListener("submit", async function (e) {
+
+        e.preventDefault();
+
+        const email = document.getElementById("loginEmail").value.trim();
+        const password = document.getElementById("loginPassword").value;
+
+        if (!email || !password) {
+            loginMessage.textContent =
+                "Please enter your email and password.";
+            return;
+        }
+
+        const loginButton =
+            loginForm.querySelector("button[type='submit']");
+
+        loginButton.disabled = true;
+        loginButton.textContent = "Logging in...";
+
+        try {
+
+            const response = await fetch(
+                "https://let-s-go-ikgptu.onrender.com/student-login",
+                {
+                    method: "POST",
+
+                    headers: {
+                        "Content-Type": "application/json"
+                    },
+
+                    body: JSON.stringify({
+                        email,
+                        password
+                    })
+                }
+            );
+
+            const data = await response.json();
+
+            if (response.ok) {
+
+                // Save authentication token
+                localStorage.setItem(
+                    "studentToken",
+                    data.token
+                );
+
+                // Keep the existing flag if your map currently
+                // uses it to determine registration status.
+                localStorage.setItem(
+                    "scm_registered",
+                    "true"
+                );
+
+                // Optional: save student information
+                localStorage.setItem(
+                    "student",
+                    JSON.stringify(data.student)
+                );
+
+                window.location.href = "index.html";
+
+            } else {
+
+                loginMessage.textContent =
+                    data.message || "Invalid email or password.";
+
+                loginButton.disabled = false;
+                loginButton.textContent = "Login & Continue";
+            }
+
+        } catch (error) {
+
+            console.error(error);
+
+            loginMessage.textContent =
+                "Cannot connect to server. Please try again.";
+
+            loginButton.disabled = false;
+            loginButton.textContent = "Login & Continue";
+        }
+
+    });
+
+}
+
+
+if (showRegisterBtn) {
+
+    showRegisterBtn.addEventListener("click", function () {
+
+        document.getElementById("loginSection").style.display = "none";
+
+        document.getElementById("registerSection").style.display = "block";
+
+    });
+
+}
+const backToRegistrationBtn =
+    document.getElementById("backToRegistrationBtn");
+
+if (backToRegistrationBtn) {
+
+    backToRegistrationBtn.addEventListener("click", function () {
+
+        // Hide OTP section
+        document.getElementById("otpSection").style.display = "none";
+
+        // Show registration form
+        document.getElementById("registerForm").style.display = "block";
+
+        // Clear OTP
+        document.getElementById("otp").value = "";
+
+        // Clear OTP message
+        document.getElementById("otpMessage").textContent = "";
+
+        // Restore register button
+        const registerBtn =
+            document.querySelector("#registerForm button[type='submit']");
+
+        if (registerBtn) {
+            registerBtn.disabled = false;
+            registerBtn.textContent =
+                registerBtn.dataset.originalText || "Register & Continue";
+        }
+
+    });
+
+}
