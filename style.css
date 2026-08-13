@@ -1210,3 +1210,6 @@ h1, h2 {
         font-size: 13px;
     }
 }
+.filters {
+    display: none !important;
+}
