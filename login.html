@@ -92,13 +92,31 @@
         </select>
 
         <label>Batch</label>
-        <select id="batch" required>
-            <option value="">Select Batch</option>
-        </select>
+<select id="batch" required>
+    <option value="">Select Batch</option>
+</select>
 
-        <button type="submit">
-            Register & Continue
-        </button>
+<label>Password</label>
+<input
+    type="password"
+    id="password"
+    placeholder="Create a password (minimum 8 characters)"
+    minlength="8"
+    required
+>
+
+<label>Confirm Password</label>
+<input
+    type="password"
+    id="confirmPassword"
+    placeholder="Re-enter your password"
+    minlength="8"
+    required
+>
+
+<button type="submit">
+    Register & Continue
+</button>
 
     </form>
 

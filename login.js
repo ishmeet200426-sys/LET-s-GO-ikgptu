@@ -162,27 +162,43 @@ document.getElementById("registerForm").addEventListener("submit", async functio
     const form = e.target;
     const submitBtn = form.querySelector("button[type='submit']");
 
-    const student = {
-        name: document.getElementById("name").value.trim(),
-        phone: document.getElementById("phone").value.trim(),
-        email: document.getElementById("email").value.trim(),
-        category: category.value,
-        course: course.value,
-        batch: batch.value
-    };
+   const student = {
+    name: document.getElementById("name").value.trim(),
+    phone: document.getElementById("phone").value.trim(),
+    email: document.getElementById("email").value.trim(),
+    category: category.value,
+    course: course.value,
+    batch: batch.value,
+    password: document.getElementById("password").value
+};
+
+const confirmPassword =
+    document.getElementById("confirmPassword").value;
 
     // Basic validation
     if (
-        !student.name ||
-        !student.phone ||
-        !student.email ||
-        !student.category ||
-        !student.course ||
-        !student.batch
-    ) {
-        alert("Please fill in all fields.");
-        return;
-    }
+    !student.name ||
+    !student.phone ||
+    !student.email ||
+    !student.category ||
+    !student.course ||
+    !student.batch ||
+    !student.password ||
+    !confirmPassword
+) {
+    alert("Please fill in all fields.");
+    return;
+}
+
+if (student.password.length < 8) {
+    alert("Password must be at least 8 characters long.");
+    return;
+}
+
+if (student.password !== confirmPassword) {
+    alert("Passwords do not match.");
+    return;
+}
 
     // Phone must be exactly 10 digits, starting with 6-9 (valid Indian mobile format)
     const phonePattern = /^[6-9]\d{9}$/;
