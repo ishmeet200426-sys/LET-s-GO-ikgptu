@@ -63,6 +63,46 @@
         😕 No location found. Try a different search or filter.
     </div>
 
+    <!-- Category Filters, styled as pill chips -->
+    <div class="filters">
+
+        <label class="filter-chip"><input type="checkbox" value="Entrance" checked> Entrance</label>
+        <label class="filter-chip"><input type="checkbox" value="Academic" checked> Academic</label>
+        <label class="filter-chip"><input type="checkbox" value="Administration" checked> Administration</label>
+        <label class="filter-chip"><input type="checkbox" value="Food" checked> Food</label>
+        <label class="filter-chip"><input type="checkbox" value="Sports" checked> Sports</label>
+        <label class="filter-chip"><input type="checkbox" value="Parking" checked> Parking</label>
+        <label class="filter-chip"><input type="checkbox" value="Service" checked> Service</label>
+        <label class="filter-chip"><input type="checkbox" value="Facility" checked> Facility</label>
+        <label class="filter-chip"><input type="checkbox" value="Auditorium" checked> Auditorium</label>
+        <label class="filter-chip"><input type="checkbox" value="Hostel" checked> Hostel</label>
+
+    </div>
+
+    <div class="nearest-box">
+        <button onclick="findNearest('Parking')">🚗 Nearest Parking</button>
+        <button onclick="findNearest('Food')">🍴 Nearest Food</button>
+        <button onclick="openAssistant()">🧠 Smart Assistant</button>
+    </div>
+
+    <div id="assistantPanel" class="assistant-panel">
+
+        <h2>🧠 Smart Campus Assistant</h2>
+
+        <div class="assistant-grid">
+
+            <div class="card" onclick="assistantAction('study')">
+                📚<br>Study
+            </div>
+
+            <div class="card">💻<br>Code</div>
+
+            <div class="card">🍴<br>Food</div>
+
+            <div class="card">🌳<br>Relax</div>
+
+            <div class="card">🚗<br>Parking</div>
+
 
     <div id="adminPanel" class="admin-panel">
 
