@@ -776,17 +776,24 @@ departmentsDropdownBtn.addEventListener("click", (e) => {
     showAllDepartmentsDropdown();
 });
 
-// Live search: fires on every keystroke, not just button click
-searchInput.addEventListener("input", () => {
-    searchResultsBox.dataset.mode = "search";
-    applyFilters();
-});
+// Search box is now dropdown-only.
+// User cannot type; clicking/focusing opens the existing location list.
+searchInput.readOnly = true;
 
-// Show the full grouped dropdown as soon as the box is clicked/focused,
-// even before typing anything
-searchInput.addEventListener("focus", () => {
+searchInput.addEventListener("click", (e) => {
+    e.stopPropagation();
+
+    const isOpen = searchResultsBox.style.display === "block";
+
+    if (isOpen) {
+        searchResultsBox.style.display = "none";
+        map.invalidateSize();
+        return;
+    }
+
+    searchInput.value = "";
     searchResultsBox.dataset.mode = "search";
-    updateSearchDropdown(searchInput.value.toLowerCase().trim());
+    updateSearchDropdown("");
 });
 
 // Close the dropdown when clicking anywhere outside it (but not on the
@@ -977,20 +984,35 @@ function startLiveTracking() {
             // the department/floor info again right at that moment,
             // instead of relying on someone remembering what the search
             // panel said 10 minutes and one building ago.
-            if (currentDestination && !hasShownArrivalInfo) {
+        if (currentDestination && !hasShownArrivalInfo) {
+    const destinationLatLng = L.latLng(
+        currentDestination.latitude,
+        currentDestination.longitude
+    );
 
-                const destinationLatLng = L.latLng(
-                    currentDestination.latitude,
-                    currentDestination.longitude
-                );
-                const distanceToDestination = newLatLng.distanceTo(destinationLatLng);
+    const distanceToDestination =
+        newLatLng.distanceTo(destinationLatLng);
 
-                if (distanceToDestination <= ARRIVAL_THRESHOLD_METERS) {
-                    hasShownArrivalInfo = true;
-                    showArrivalInfo(currentDestination);
-                }
+    if (distanceToDestination <= SAME_BUILDING_RADIUS_METERS) {
 
-            }
+        hasShownArrivalInfo = true;
+
+        // Stop the incorrect OSRM route immediately
+        if (routingControl) {
+            map.removeControl(routingControl);
+            routingControl = null;
+        }
+
+        // Stop live rerouting
+        stopLiveTracking();
+
+        // Remove the directions card
+        hideDirections();
+
+        // Show the actual destination information
+        showArrivalInfo(currentDestination);
+    }
+}
 
         },
 
@@ -1141,9 +1163,42 @@ function navigateTo(lat, lng, destinationLocation, dept) {
 
     function createRoute(userLat, userLng) {
 
-        showNavigationStartBanner(destinationLocation, dept, userLat, userLng, lat, lng);
+    // If the user is already at/inside the destination building,
+    // do NOT ask OSRM to create a road route.
+    const distanceToDestination = map.distance(
+        [userLat, userLng],
+        [lat, lng]
+    );
 
-        showRouteLoading("Calculating route...");
+    if (distanceToDestination <= SAME_BUILDING_RADIUS_METERS) {
+
+        // Remove any previous route
+        if (routingControl) {
+            map.removeControl(routingControl);
+            routingControl = null;
+        }
+
+        hideRouteLoading();
+
+        // Save current position
+        userLocation = [userLat, userLng];
+
+        // Show the destination information instead of a road route
+        showArrivalInfo(destinationLocation);
+
+        return;
+    }
+
+    showNavigationStartBanner(
+        destinationLocation,
+        dept,
+        userLat,
+        userLng,
+        lat,
+        lng
+    );
+
+    showRouteLoading("Calculating route...");
 
         // Remove previous route
         if (routingControl) {
@@ -1380,11 +1435,19 @@ function openAdmin(){
 // Close Admin Panel
 // NOTE: index.html's #closeAdmin button no longer has an inline onclick,
 // so this is the single source of truth for closing the panel.
-document.getElementById("closeAdmin").onclick = function(){
+// Close Admin Panel
+document.addEventListener("DOMContentLoaded", function () {
 
-    document.getElementById("adminPanel").style.display = "none";
+    const closeAdminBtn = document.getElementById("closeAdmin");
+    const adminPanel = document.getElementById("adminPanel");
 
-}
+    if (closeAdminBtn && adminPanel) {
+        closeAdminBtn.addEventListener("click", function () {
+            adminPanel.style.display = "none";
+        });
+    }
+
+});
 
 function generateJSON() {
 

@@ -1429,3 +1429,58 @@ h1, h2 {
 .filters {
     display: none !important;
 }
+/* Search box - dropdown style */
+#searchInput {
+    cursor: pointer;
+    appearance: none;
+    -webkit-appearance: none;
+    background-color: white;
+    border: 1px solid #ccc;
+    padding: 10px 14px;
+    border-radius: 6px;
+    font-size: 14px;
+    width: 260px;
+}
+
+#searchInput:hover {
+    background-color: #f5f5f5;
+}
+
+#searchInput:focus {
+    outline: none;
+}
+/* ===== Destination pin label - improved layout ===== */
+
+.leaflet-tooltip.dest-pin-label {
+    background: #1f2937;
+    color: #ffffff;
+
+    border: none;
+    border-radius: 10px;
+
+    padding: 7px 11px;
+
+    font-size: 11px;
+    font-weight: 700;
+    line-height: 1.35;
+
+    max-width: 180px;
+    min-width: 90px;
+
+    white-space: normal;
+    text-align: center;
+
+    box-shadow: 0 3px 10px rgba(0, 0, 0, 0.22);
+
+    z-index: 1000;
+}
+
+/* Keep the little pointer clean */
+.leaflet-tooltip.dest-pin-label::before {
+    border-top-color: #1f2937;
+}
+
+/* Give the label some breathing room from the marker */
+.leaflet-tooltip-top.dest-pin-label {
+    margin-bottom: 10px;
+}
