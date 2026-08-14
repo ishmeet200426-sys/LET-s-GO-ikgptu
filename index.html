@@ -64,12 +64,15 @@
     </div>
 
     <!-- Category Filters, styled as pill chips -->
-    <!-- <div class="filters">
+    <!-- Hidden for launch to reduce clutter, but kept in the DOM (display:none)
+         because script.js reads these checkboxes to know which categories
+         are active. Deleting/commenting them out breaks search entirely. -->
+    <div class="filters" style="display:none;">
 
         <label class="filter-chip"><input type="checkbox" value="Entrance" checked> Entrance</label>
         <label class="filter-chip"><input type="checkbox" value="Academic" checked> Academic</label>
-        <label class="filter-chip"><input type="checkbox" value="Administration" checked> Administration</label> -->
-        <!-- <label class="filter-chip"><input type="checkbox" value="Food" checked> Food</label>
+        <label class="filter-chip"><input type="checkbox" value="Administration" checked> Administration</label>
+        <label class="filter-chip"><input type="checkbox" value="Food" checked> Food</label>
         <label class="filter-chip"><input type="checkbox" value="Sports" checked> Sports</label>
         <label class="filter-chip"><input type="checkbox" value="Parking" checked> Parking</label>
         <label class="filter-chip"><input type="checkbox" value="Service" checked> Service</label>
@@ -77,32 +80,9 @@
         <label class="filter-chip"><input type="checkbox" value="Auditorium" checked> Auditorium</label>
         <label class="filter-chip"><input type="checkbox" value="Hostel" checked> Hostel</label>
 
-    </div> -->
-
-    <!-- <div class="nearest-box">
-        <button onclick="findNearest('Parking')">🚗 Nearest Parking</button>
-        <button onclick="findNearest('Food')">🍴 Nearest Food</button>
-        <button onclick="openAssistant()">🧠 Smart Assistant</button>
     </div>
 
-    <div id="assistantPanel" class="assistant-panel">
-
-        <h2>🧠 Smart Campus Assistant</h2>
-
-        <div class="assistant-grid">
-
-            <div class="card" onclick="assistantAction('study')">
-                📚<br>Study
-            </div>
-
-            <div class="card">💻<br>Code</div>
-
-            <div class="card">🍴<br>Food</div>
-
-            <div class="card">🌳<br>Relax</div> -->
-
-            <!-- <div class="card">🚗<br>Parking</div> -->
-
+    <!-- Nearest Parking / Nearest Food / Smart Assistant buttons hidden for launch -->
 
     <div id="adminPanel" class="admin-panel">
 
@@ -221,11 +201,40 @@
                     </span>
                 </button>
 
+                <!-- Small live compass: rotates to always point true north as the
+                     phone turns, using the device's orientation sensor. Sits right
+                     in the directions card row (same 30px size as the buttons next
+                     to it), so it never grows or covers the map/directions view. -->
+                <button id="compassBadge" type="button" class="compass-badge"
+                        title="Tap for full compass" aria-label="Compass, tap to expand">
+                    <span id="compassNeedle" class="compass-needle"></span>
+                </button>
+
                 <button id="directionsMinimizeBtn" class="directions-minimize-btn"
                         type="button" title="Minimize" aria-label="Minimize directions">⌄</button>
 
                 <button id="directionsCloseBtn" class="directions-close-btn"
                         type="button" title="Close directions" aria-label="Close directions">✕</button>
+            </div>
+        </div>
+
+        <!-- Expanded compass dial: hidden until the small compass badge above
+             is tapped. Shows N/E/S/W and a bigger live needle. Sits outside
+             .directions-card (which clips overflow) so it can float above it
+             without being cut off. Tap the badge again, or the ✕, to close. -->
+        <div id="compassExpanded" class="compass-expanded">
+            <div class="compass-dial">
+                <span class="compass-label compass-label-n">N</span>
+                <span class="compass-label compass-label-ne">NE</span>
+                <span class="compass-label compass-label-e">E</span>
+                <span class="compass-label compass-label-se">SE</span>
+                <span class="compass-label compass-label-s">S</span>
+                <span class="compass-label compass-label-sw">SW</span>
+                <span class="compass-label compass-label-w">W</span>
+                <span class="compass-label compass-label-nw">NW</span>
+                <span id="compassExpandedNeedle" class="compass-needle compass-needle-lg"></span>
+                <button id="compassExpandedClose" type="button" class="compass-expanded-close"
+                        aria-label="Close compass">✕</button>
             </div>
         </div>
 

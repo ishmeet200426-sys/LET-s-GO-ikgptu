@@ -1469,7 +1469,99 @@ if (sheetCloseBtn) {
     sheetCloseBtn.addEventListener("click", closeDirectionsSheet);
 }
 
+
+const compassBadge = document.getElementById("compassBadge");
+
+if (compassBadge) {
+    // Tapping the badge is what satisfies iOS's "must be a user gesture"
+    // requirement for the permission prompt, and also opens the dial.
+    compassBadge.addEventListener("click", () => {
+        startCompass();
+        toggleCompassExpanded();
+    });
+    // On Android/desktop this just works immediately with no prompt;
+    // on iOS it's a no-op until the user taps (handled above).
+    startCompass();
+}
+
+const compassExpandedClose = document.getElementById("compassExpandedClose");
+
+if (compassExpandedClose) {
+    compassExpandedClose.addEventListener("click", (e) => {
+        e.stopPropagation();
+        closeCompassExpanded();
+    });
+}
+
 });
+
+function toggleCompassExpanded() {
+    const panel = document.getElementById("compassExpanded");
+    if (panel) panel.classList.toggle("visible");
+}
+
+function closeCompassExpanded() {
+    const panel = document.getElementById("compassExpanded");
+    if (panel) panel.classList.remove("visible");
+}
+
+// --- Live compass: rotates the small needle in the directions card so
+// it always points true north as the phone turns. Uses the device's
+// orientation sensor (magnetometer), same as the browser Compass API. ---
+let compassActive = false;
+
+function handleOrientation(event) {
+    let heading;
+
+    if (typeof event.webkitCompassHeading === "number") {
+        // iOS Safari gives a ready-to-use compass heading directly.
+        heading = event.webkitCompassHeading;
+    } else if (typeof event.alpha === "number") {
+        // Android / other browsers: alpha counts counter-clockwise from
+        // north, so flip it to get a clockwise compass heading.
+        heading = 360 - event.alpha;
+    } else {
+        return;
+    }
+
+    heading = (heading + 360) % 360;
+
+    const needle = document.getElementById("compassNeedle");
+    if (needle) needle.style.transform = `rotate(${-heading}deg)`;
+
+    const needleLg = document.getElementById("compassExpandedNeedle");
+    if (needleLg) needleLg.style.transform = `rotate(${-heading}deg)`;
+}
+
+function startCompass() {
+    if (compassActive) return;
+
+    if (typeof DeviceOrientationEvent !== "undefined" &&
+        typeof DeviceOrientationEvent.requestPermission === "function") {
+        // iOS 13+ requires this to be called from a user gesture (the tap
+        // on the compass badge), which is why we also wire it to a click
+        // handler below instead of only calling it on page load.
+        DeviceOrientationEvent.requestPermission()
+            .then(state => {
+                if (state === "granted") {
+                    window.addEventListener("deviceorientation", handleOrientation, true);
+                    compassActive = true;
+                } else {
+                    console.log("Compass permission denied.");
+                }
+            })
+            .catch(err => console.log("Compass permission error:", err));
+    } else if ("ondeviceorientationabsolute" in window) {
+        // Most Android browsers: absolute heading, no permission prompt needed.
+        window.addEventListener("deviceorientationabsolute", handleOrientation, true);
+        compassActive = true;
+    } else if (typeof DeviceOrientationEvent !== "undefined") {
+        window.addEventListener("deviceorientation", handleOrientation, true);
+        compassActive = true;
+    } else {
+        console.log("Compass not supported on this device/browser.");
+    }
+}
 
 function recenterMap() {
     isFollowingUser = true;

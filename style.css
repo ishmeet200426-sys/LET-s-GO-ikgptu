@@ -1,4 +1,3 @@
-
 /* Remove default margin and padding */
 body {
     margin: 0;
@@ -531,6 +530,159 @@ h1, h2 {
 
 .directions-meta-dot {
     margin: 0 5px;
+}
+
+/* --- Small live compass badge, sits inside the directions card row.
+   Fixed at 30px (same as the minimize/close buttons beside it) so it
+   can never grow large enough to crowd or cover the directions view. --- */
+.compass-badge {
+    flex-shrink: 0;
+    width: 30px;
+    height: 30px;
+    border: 1px solid #e9ecef;
+    border-radius: 50%;
+    background: #f8f9fa;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 0;
+}
+
+.compass-badge:hover {
+    background: #e9ecef;
+}
+
+/* The needle itself: a small red/gray diamond, red half points north.
+   JS rotates this element directly via style.transform. */
+.compass-needle {
+    position: relative;
+    width: 0;
+    height: 0;
+    display: inline-block;
+    transition: transform 0.15s linear;
+}
+
+.compass-needle::before {
+    /* North half — red, points up */
+    content: "";
+    position: absolute;
+    left: -4px;
+    top: -9px;
+    border-left: 4px solid transparent;
+    border-right: 4px solid transparent;
+    border-bottom: 9px solid #e03131;
+}
+
+.compass-needle::after {
+    /* South half — gray, points down */
+    content: "";
+    position: absolute;
+    left: -4px;
+    top: 0;
+    border-left: 4px solid transparent;
+    border-right: 4px solid transparent;
+    border-top: 9px solid #adb5bd;
+}
+
+/* Keep the same fixed 30px size even when the directions card shrinks
+   to its minimized bar — never grows, never shrinks smaller either. */
+.directions-card.minimized .compass-badge {
+    width: 30px;
+    height: 30px;
+}
+
+/* --- Expanded compass dial: opens when the small badge is tapped ---
+   Deliberately capped at 140px — big enough to read N/E/S/W comfortably,
+   small enough to never swallow the map or the directions card beneath it. */
+.compass-expanded {
+    position: absolute;
+    top: 64px;
+    left: 16px;
+    z-index: 902;
+    display: none;
+}
+
+.compass-expanded.visible {
+    display: block;
+}
+
+.compass-dial {
+    position: relative;
+    width: 160px;
+    height: 160px;
+    border-radius: 50%;
+    background: white;
+    border: 1px solid #e9ecef;
+    box-shadow: 0 8px 24px rgba(0,0,0,0.25);
+}
+
+.compass-label {
+    position: absolute;
+    font-size: 13px;
+    font-weight: 700;
+    color: #495057;
+}
+
+/* Cardinal directions (N/E/S/W) sit right at the edge. */
+.compass-label-n { top: 8px; left: 50%; transform: translateX(-50%); color: #e03131; }
+.compass-label-s { bottom: 8px; left: 50%; transform: translateX(-50%); }
+.compass-label-e { right: 8px; top: 50%; transform: translateY(-50%); }
+.compass-label-w { left: 8px; top: 50%; transform: translateY(-50%); }
+
+/* Sub/intercardinal directions (NE/SE/SW/NW) sit on the diagonals,
+   slightly smaller so all 8 labels stay easy to read at this size. */
+.compass-label-ne,
+.compass-label-se,
+.compass-label-sw,
+.compass-label-nw {
+    font-size: 10px;
+    color: #868e96;
+    transform: translate(-50%, -50%);
+}
+
+.compass-label-ne { top: 30px; left: 130px; }
+.compass-label-se { top: 130px; left: 130px; }
+.compass-label-sw { top: 130px; left: 30px; }
+.compass-label-nw { top: 30px; left: 30px; }
+
+/* Bigger version of the same needle used in the small badge, centered
+   in the dial. JS rotates this in sync with the small one. */
+.compass-needle-lg {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+}
+
+.compass-needle-lg::before {
+    left: -7px;
+    top: -32px;
+    border-left-width: 7px;
+    border-right-width: 7px;
+    border-bottom-width: 32px;
+}
+
+.compass-needle-lg::after {
+    left: -7px;
+    top: 0;
+    border-left-width: 7px;
+    border-right-width: 7px;
+    border-top-width: 32px;
+}
+
+.compass-expanded-close {
+    position: absolute;
+    top: -10px;
+    right: -10px;
+    width: 26px;
+    height: 26px;
+    border: 0;
+    border-radius: 50%;
+    background: #495057;
+    color: white;
+    font-size: 12px;
+    cursor: pointer;
+    box-shadow: 0 2px 6px rgba(0,0,0,0.25);
 }
 
 .directions-minimize-btn {
