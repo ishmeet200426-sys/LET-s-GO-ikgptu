@@ -2,15 +2,15 @@
     {
         "name": "Main Gate",
         "category": "Entrance",
-        "latitude": 31.353528032684387,
-        "longitude": 75.45866836894066,
+        "latitude": 31.353575159101947,
+        "longitude": 75.45876978226867,
         "description": "Main entrance of IKGPTU Jalandhar Campus."
     },
     {
         "name": "Main Building",
         "category": "Administration",
-        "latitude": 31.35260925075653,
-        "longitude": 75.45830791264795,
+        "latitude": 31.352969897255015,
+        "longitude": 75.45883120632206,
         "description": "Administrative hub — meet the Deans and other key offices here.",
         "departments": [
             {
@@ -23,11 +23,7 @@
                 "floor": "3rd Floor",
                 "abbr": "T&P"
             },
-            {
-                "name": "Student Facilitation Centre",
-                "floor": "",
-                "abbr": "SFC"
-            },
+            
             {
                 "name": "Office of Youth Affairs & Sports",
                 "floor": "3rd Floor",
@@ -40,12 +36,15 @@
             }
         ]
     },
-    {
-        "name": "AB-1",
+
+    
+        {
+        "name": "AB-1 Gate",
         "category": "Academic",
-        "latitude": 31.352157246394963,
-        "longitude": 75.46014848330942,
-        "description": "Academic Block 1",
+        "latitude": 31.352646206012327,
+        "longitude": 75.4586096883838,
+        "description": "Gate leading toward AB-1.",
+    
         "departments": [
             {
                 "name": "Dept. of Mechanical Engineering",
@@ -70,11 +69,12 @@
         ]
     },
     {
-        "name": "AB-2",
+        "name": "AB-2 Gate",
         "category": "Academic",
-        "latitude": 31.352954360574785,
-        "longitude": 75.45947793104271,
-        "description": "Academic Block 2",
+        "latitude": 31.3526682203958,
+        "longitude": 75.46011480949267,
+        "description": "Gate leading toward AB-2.",
+    
         "departments": [
             {
                 "name": "Dept. of Civil Engineering",
@@ -111,8 +111,8 @@
     {
         "name": "AB-3 (PIT Building)",
         "category": "Academic",
-        "latitude": 31.351749913542406,
-        "longitude": 75.46355914422877,
+        "latitude": 31.351631510182695,
+        "longitude": 75.46395650077963,
         "description": "Academic Block 3 / PIT Building (Ground + 2 floors).",
         "departments": [
             {
@@ -137,13 +137,7 @@
             }
         ]
     },
-    {
-        "name": "Computer Lab",
-        "category": "Academic",
-        "latitude": 31.35241837074973,
-        "longitude": 75.46099606137459,
-        "description": "Computer Laboratory."
-    },
+    
     {
         "name": "Knowledge Resource Centre (Library)",
         "category": "Academic",
@@ -166,19 +160,21 @@
         "description": "Main Parking Area."
     },
     {
-        "name": "Shri Guru Nanak Dev Ji Auditorium",
+        "name": "Shri Guru Nanak Dev Ji Auditorium - Front gate",
         "category": "Auditorium",
         "latitude": 31.35348629706208,
         "longitude": 75.45707383737383,
         "description": "University Auditorium."
     },
     {
-        "name": "cc lab ",
-        "category": "Academic",
-        "latitude": 31.352753740980923,
-        "longitude": 75.46033495385787,
-        "description": "welcome to lab - let's code"
-    },
+    "name": "Shri Guru Nanak Dev Ji Auditorium - Back gate",
+    "category": "Auditorium",
+    "description": "University Auditorium. - student access",
+    "latitude": 31.35332544477527,
+    "longitude": 75.45702610040769
+},
+    
+    
     {
         "name": "BH-1",
         "category": "Hostel",
@@ -235,13 +231,7 @@
         "longitude": 75.45889437911805,
         "description": "Parking area near the Main Building."
     },
-    {
-        "name": "AB-1 Gate",
-        "category": "Academic",
-        "latitude": 31.352646206012327,
-        "longitude": 75.4586096883838,
-        "description": "Gate leading toward AB-1."
-    },
+    
     {
         "name": "AB-1 Gate Parking",
         "category": "Parking",
@@ -291,13 +281,7 @@
         "longitude": 75.46034318692404,
         "description": "Seminar hall inside the Knowledge Resource Centre."
     },
-    {
-        "name": "AB-2 Gate",
-        "category": "Academic",
-        "latitude": 31.3526682203958,
-        "longitude": 75.46011480949267,
-        "description": "Gate leading toward AB-2."
-    },
+    
     {
         "name": "AB-2 Gate Parking",
         "category": "Parking",
@@ -339,5 +323,12 @@
         "latitude": 31.351672391867975,
         "longitude": 75.46378580939454,
         "description": "Gate near AB-3 (PIT Building)."
-    }
+    },
+    {
+    "name": "Student facilitation centre",
+    "category": "Administration",
+    "description": "Any degree related issues are addressed here",
+    "latitude": 31.352927601059193,
+    "longitude": 75.45881238473542
+}
 ]
