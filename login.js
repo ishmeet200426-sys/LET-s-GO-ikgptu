@@ -45,6 +45,7 @@ const courseData = {
 
     "Management": [
         "BBA",
+        "BCom",
         "MBA",
         "BHMCT"
     ],
@@ -54,7 +55,8 @@ const courseData = {
         "MCA",
         "B.Sc Chem/Phy/Math/Food Tech",
         "BAJMC",
-        "M.Sc-FT"
+        "M.Sc-FT",
+        "B.Voc"
     ]
 };
 
