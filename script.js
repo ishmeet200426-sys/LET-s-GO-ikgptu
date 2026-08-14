@@ -671,18 +671,83 @@ function goToLocation(location) {
 }
 
 
+// Builds a flat, alphabetical list of EVERY department/office across ALL
+// buildings, regardless of the current search text or category filters.
+// This is what powers the "Departments ▾" browse button — someone can
+// pick a department straight from the list without typing anything.
+function buildAllDepartmentsFlatList() {
+
+    const items = [];
+
+    allLocations.forEach(location => {
+        if (!location.departments) return;
+        location.departments.forEach(dept => {
+            items.push({ location, dept });
+        });
+    });
+
+    items.sort((a, b) => a.dept.name.localeCompare(b.dept.name));
+
+    return items;
+
+}
+
+function showAllDepartmentsDropdown() {
+
+    searchResultsBox.innerHTML = "";
+
+    const items = buildAllDepartmentsFlatList();
+
+    items.forEach(item => {
+        searchResultsBox.appendChild(buildDepartmentResult(item.location, item.dept));
+    });
+
+    searchResultsBox.style.display = "block";
+    map.invalidateSize();
+
+}
+
+const departmentsDropdownBtn = document.getElementById("departmentsDropdownBtn");
+
+departmentsDropdownBtn.addEventListener("click", (e) => {
+    e.stopPropagation();
+
+    // Toggle: if the dropdown is already open and showing the
+    // department browse list, clicking again closes it.
+    const isOpen = searchResultsBox.style.display === "block"
+        && searchResultsBox.dataset.mode === "departments-browse";
+
+    if (isOpen) {
+        searchResultsBox.style.display = "none";
+        return;
+    }
+
+    searchInput.value = "";
+    searchResultsBox.dataset.mode = "departments-browse";
+    showAllDepartmentsDropdown();
+});
+
 // Live search: fires on every keystroke, not just button click
-searchInput.addEventListener("input", applyFilters);
+searchInput.addEventListener("input", () => {
+    searchResultsBox.dataset.mode = "search";
+    applyFilters();
+});
 
 // Show the full grouped dropdown as soon as the box is clicked/focused,
 // even before typing anything
 searchInput.addEventListener("focus", () => {
+    searchResultsBox.dataset.mode = "search";
     updateSearchDropdown(searchInput.value.toLowerCase().trim());
 });
 
-// Close the dropdown when clicking anywhere outside it
+// Close the dropdown when clicking anywhere outside it (but not on the
+// Departments browse button itself — that has its own toggle logic)
 document.addEventListener("click", (e) => {
-    if (!searchResultsBox.contains(e.target) && e.target !== searchInput) {
+    if (
+        !searchResultsBox.contains(e.target) &&
+        e.target !== searchInput &&
+        e.target !== departmentsDropdownBtn
+    ) {
         searchResultsBox.style.display = "none";
     }
 });
@@ -702,6 +767,7 @@ checkboxes.forEach(box => {
 function resetAll() {
 
     searchInput.value = "";
+    searchResultsBox.dataset.mode = "search";
 
     checkboxes.forEach(box => {
         box.checked = true;

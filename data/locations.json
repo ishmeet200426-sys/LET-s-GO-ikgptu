@@ -26,11 +26,11 @@
                 "floor": ""
             },
             {
-                "name": "office - Youth affairs & sports",
+                "name": "Office of Youth Affairs & Sports",
                 "floor": "3rd Floor"
             },
             {
-                "name": "office - dean student welfare",
+                "name": "Office of the Dean, Student Welfare",
                 "floor": "4th Floor"
             }
         ]
@@ -43,15 +43,15 @@
         "description": "Academic Block 1",
         "departments": [
             {
-                "name": "Mechanical Engineering",
+                "name": "Dept. of Mechanical Engineering",
                 "floor": "Ground & 1st Floor"
             },
             {
-                "name": "Electronics & Communication Engineering",
+                "name": "Dept. of Electronics & Communication Engineering",
                 "floor": "2nd & 3rd Floor"
             },
             {
-                "name": "Computer Science & Engineering",
+                "name": "Dept. of Computer Science & Engineering",
                 "floor": "4th & 5th Floor"
             },
             {
@@ -68,23 +68,23 @@
         "description": "Academic Block 2",
         "departments": [
             {
-                "name": "Civil Engineering",
+                "name": "Dept. of Civil Engineering",
                 "floor": "Ground Floor"
             },
             {
-                "name": "Department of Languages",
+                "name": "Dept. of Languages",
                 "floor": "1st Floor"
             },
             {
-                "name": "Electrical Engineering",
+                "name": "Dept. of Electrical Engineering",
                 "floor": "2nd & 3rd Floor"
             },
             {
-                "name": "Hotel Management and Catering",
+                "name": "Dept. of Hotel Management and Catering",
                 "floor": "4th Floor"
             },
             {
-                "name": "Department of Management",
+                "name": "Dept. of Management",
                 "floor": "5th Floor"
             }
         ]
@@ -97,7 +97,7 @@
         "description": "Academic Block 3 / PIT Building (Ground + 2 floors).",
         "departments": [
             {
-                "name": "Applied Sciences",
+                "name": "Dept. of Applied Sciences",
                 "floor": "Ground & 1st Floor"
             },
             {
@@ -105,7 +105,7 @@
                 "floor": "Ground Floor"
             },
             {
-                "name": "Department of Journalism & Mass Communication",
+                "name": "Dept. of Journalism & Mass Communication",
                 "floor": "2nd Floor"
             }
         ]
