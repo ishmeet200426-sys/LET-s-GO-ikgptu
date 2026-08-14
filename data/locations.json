@@ -15,23 +15,28 @@
         "departments": [
             {
                 "name": "Seminar Hall (LH-4)",
-                "floor": "Ground Floor"
+                "floor": "Ground Floor",
+                "abbr": "LH-4"
             },
             {
                 "name": "Training & Placement Cell",
-                "floor": "3rd Floor"
+                "floor": "3rd Floor",
+                "abbr": "T&P"
             },
             {
                 "name": "Student Facilitation Centre",
-                "floor": ""
+                "floor": "",
+                "abbr": "SFC"
             },
             {
                 "name": "Office of Youth Affairs & Sports",
-                "floor": "3rd Floor"
+                "floor": "3rd Floor",
+                "abbr": "YAS"
             },
             {
                 "name": "Office of the Dean, Student Welfare",
-                "floor": "4th Floor"
+                "floor": "4th Floor",
+                "abbr": "DSW"
             }
         ]
     },
@@ -44,19 +49,23 @@
         "departments": [
             {
                 "name": "Dept. of Mechanical Engineering",
-                "floor": "Ground & 1st Floor"
+                "floor": "Ground & 1st Floor",
+                "abbr": "ME"
             },
             {
                 "name": "Dept. of Electronics & Communication Engineering",
-                "floor": "2nd & 3rd Floor"
+                "floor": "2nd & 3rd Floor",
+                "abbr": "ECE"
             },
             {
                 "name": "Dept. of Computer Science & Engineering",
-                "floor": "4th & 5th Floor"
+                "floor": "4th & 5th Floor",
+                "abbr": "CSE"
             },
             {
                 "name": "Business Incubation Centre",
-                "floor": "1st Floor"
+                "floor": "1st Floor",
+                "abbr": "BIC"
             }
         ]
     },
@@ -69,23 +78,33 @@
         "departments": [
             {
                 "name": "Dept. of Civil Engineering",
-                "floor": "Ground Floor"
+                "floor": "Ground Floor",
+                "abbr": "CE"
             },
             {
                 "name": "Dept. of Languages",
-                "floor": "1st Floor"
+                "floor": "1st Floor",
+                "abbr": "D. OF LANG"
             },
             {
                 "name": "Dept. of Electrical Engineering",
-                "floor": "2nd & 3rd Floor"
+                "floor": "2nd & 3rd Floor",
+                "abbr": "EE"
             },
             {
                 "name": "Dept. of Hotel Management and Catering",
-                "floor": "4th Floor"
+                "floor": "4th Floor",
+                "abbr": "HMCT"
             },
             {
                 "name": "Dept. of Management",
-                "floor": "5th Floor"
+                "floor": "5th Floor",
+                "abbr": "MGMT"
+            },
+            {
+                "name": "B.Com / BBA",
+                "floor": "5th Floor",
+                "abbr": "BCOM/BBA"
             }
         ]
     },
@@ -98,15 +117,23 @@
         "departments": [
             {
                 "name": "Dept. of Applied Sciences",
-                "floor": "Ground & 1st Floor"
+                "floor": "Ground & 1st Floor",
+                "abbr": "D. OF APP SCI"
+            },
+            {
+                "name": "B.Voc (Applied)",
+                "floor": "Ground & 1st Floor",
+                "abbr": "B.VOC"
             },
             {
                 "name": "Physics & Chemistry Labs",
-                "floor": "Ground Floor"
+                "floor": "Ground Floor",
+                "abbr": "PHY/CHEM LAB"
             },
             {
                 "name": "Dept. of Journalism & Mass Communication",
-                "floor": "2nd Floor"
+                "floor": "2nd Floor",
+                "abbr": "JMC"
             }
         ]
     },

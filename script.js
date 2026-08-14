@@ -127,7 +127,48 @@ function buildDepartmentListHTML(location) {
 
 }
 
-// Opens the building info bottom sheet with this location's details,
+// Converts a floor string like "4th & 5th Floor" into a short code like
+// "4F-5F", and "Ground Floor" into "GF" — used to build the compact
+// pin label. Segments are split on "&" so combined floors (e.g.
+// "Ground & 1st Floor") become "GF-1F".
+function abbreviateFloor(floorText) {
+
+    if (!floorText) return "";
+
+    return floorText
+        .split("&")
+        .map(segment => {
+            const trimmed = segment.trim();
+            if (trimmed.toLowerCase().includes("ground")) return "GF";
+            const digitMatch = trimmed.match(/\d+/);
+            if (digitMatch) return `${digitMatch[0]}F`;
+            return trimmed.toUpperCase();
+        })
+        .join("-");
+
+}
+
+// Builds the small, all-caps pin label for a building's marker —
+// e.g. "ME-GF-1F, ECE-2F-3F, CSE-4F-5F" — from each department's
+// short "abbr" (falls back to the full name if abbr isn't set) plus
+// its abbreviated floor. Returns "" for buildings with no departments.
+function buildPinSummary(location) {
+
+    if (!location.departments || location.departments.length === 0) {
+        return "";
+    }
+
+    return location.departments
+        .map(dept => {
+            const label = (dept.abbr || dept.name).toUpperCase();
+            const floorCode = abbreviateFloor(dept.floor);
+            return floorCode ? `${label}-${floorCode}` : label;
+        })
+        .join(", ");
+
+}
+
+
 // replacing the old cramped Leaflet popup. Scales cleanly as more
 // departments/floors get added, unlike a fixed-size map popup.
 const buildingPanel = document.getElementById("buildingPanel");
@@ -189,6 +230,12 @@ let markerAnimationFrame = null;
 let currentDestination = null;
 let hasShownArrivalInfo = false;
 const ARRIVAL_THRESHOLD_METERS = 15;
+
+// The map marker currently showing the small pin-label (department +
+// floor summary) for whichever building is the active navigation
+// destination, so we can clear it when a new navigation starts or the
+// current one is cancelled.
+let activeDestinationMarker = null;
 
 
 // Smoothly moves `marker` from its current position to `toLatLng` over
@@ -264,6 +311,8 @@ function displayMarkers(locations) {
     location.longitude
 ], { icon: isMainGate ? getMainGateIcon() : getCategoryIcon(location.category) })
 .addTo(map);
+
+        marker.locationRef = location;
 
         marker.on("click", () => openBuildingPanel(location));
 
@@ -573,7 +622,7 @@ function buildDepartmentResult(location, dept, precomputedDistanceText) {
     row.querySelector(".result-navigate-btn").addEventListener("click", (e) => {
         e.stopPropagation();
         searchResultsBox.style.display = "none";
-        navigateTo(location.latitude, location.longitude, location);
+        navigateTo(location.latitude, location.longitude, location, dept);
     });
 
     return row;
@@ -644,7 +693,7 @@ function buildBuildingGroup(location, precomputedDistanceText) {
             deptRow.querySelector(".result-navigate-btn").addEventListener("click", (e) => {
                 e.stopPropagation();
                 searchResultsBox.style.display = "none";
-                navigateTo(location.latitude, location.longitude, location);
+                navigateTo(location.latitude, location.longitude, location, dept);
             });
 
             group.appendChild(deptRow);
@@ -807,8 +856,14 @@ function showUserLocation(){
 
             window.userMarker = L.marker([latitude, longitude])
                 .addTo(map)
-                .bindPopup("📍 You are here")
-                .openPopup();
+                .bindPopup("")
+                .bindTooltip("📍 YOU ARE HERE", {
+                    permanent: true,
+                    direction: "top",
+                    offset: [0, -14],
+                    className: "pin-label start-pin-label"
+                })
+                .openTooltip();
 
             map.setView([latitude, longitude], 18);
 
@@ -879,7 +934,14 @@ function startLiveTracking() {
 
                 window.userMarker = L.marker([latitude, longitude])
                     .addTo(map)
-                    .bindPopup("📍 You are here");
+                    .bindPopup("")
+                    .bindTooltip("📍 YOU ARE HERE", {
+                        permanent: true,
+                        direction: "top",
+                        offset: [0, -14],
+                        className: "pin-label start-pin-label"
+                    })
+                    .openTooltip();
 
                 map.setView([latitude, longitude], 18);
 
@@ -962,6 +1024,58 @@ function showArrivalInfo(location) {
 
 }
 
+// Flashed once, right as navigation starts, so a student heading to a
+// department knows the route drops them at the building's entrance —
+// not at the department's office door, which routing has no way to
+// pinpoint. If the student is already inside/right next to that same
+// building (e.g. searching for another department in AB-2 while
+// already standing in AB-2), there's no outdoor route to walk, so the
+// message tells them to just start from that building's own entrance
+// instead. Auto-dismisses after a few seconds.
+const SAME_BUILDING_RADIUS_METERS = 50;
+
+function showNavigationStartBanner(destinationLocation, dept, userLat, userLng, destLat, destLng) {
+
+    const existing = document.querySelector(".nav-start-banner");
+    if (existing) existing.remove();
+
+    const buildingName = destinationLocation ? destinationLocation.name : "your destination";
+
+    let alreadyThere = false;
+    if (userLat != null && userLng != null && destLat != null && destLng != null) {
+        alreadyThere = map.distance([userLat, userLng], [destLat, destLng]) <= SAME_BUILDING_RADIUS_METERS;
+    }
+
+    // Include the floor whenever we know it, e.g. "Dept. of Management
+    // (5th Floor)", so the flash is actually useful once they're inside.
+    const deptLabel = dept
+        ? (dept.floor ? `${dept.name} (${dept.floor})` : dept.name)
+        : null;
+
+    let message;
+    if (alreadyThere) {
+        message = deptLabel
+            ? `📍 You're already at ${buildingName} — start from the ${buildingName} entrance for ${deptLabel}`
+            : `📍 You're already at ${buildingName} — start from the ${buildingName} entrance`;
+    } else {
+        message = deptLabel
+            ? `🚩 Head to the entrance of ${buildingName} — ${deptLabel} is inside`
+            : `🚩 Head to the entrance of ${buildingName}`;
+    }
+
+    const banner = document.createElement("div");
+    banner.className = "nav-start-banner";
+    banner.textContent = message;
+
+    document.body.appendChild(banner);
+
+    setTimeout(() => {
+        banner.classList.add("fade-out");
+        setTimeout(() => banner.remove(), 400);
+    }, 4500);
+
+}
+
 function stopLiveTracking() {
     if (watchId !== null) {
         navigator.geolocation.clearWatch(watchId);
@@ -995,12 +1109,39 @@ function hideRouteLoading() {
     if (indicator) indicator.classList.remove("visible");
 }
 
-function navigateTo(lat, lng, destinationLocation) {
+function navigateTo(lat, lng, destinationLocation, dept) {
 
     currentDestination = destinationLocation || null;
     hasShownArrivalInfo = false;
 
+    // Clear the pin-label from a previous destination before showing
+    // the new one, so old labels don't pile up on the map.
+    if (activeDestinationMarker) {
+        activeDestinationMarker.closeTooltip();
+        activeDestinationMarker.unbindTooltip();
+        activeDestinationMarker = null;
+    }
+
+    if (destinationLocation) {
+
+        const destMarker = markers.find(m => m.locationRef === destinationLocation);
+        const pinSummary = buildPinSummary(destinationLocation);
+
+        if (destMarker && pinSummary) {
+            destMarker.bindTooltip(pinSummary, {
+                permanent: true,
+                direction: "top",
+                offset: [0, -14],
+                className: "pin-label dest-pin-label"
+            }).openTooltip();
+            activeDestinationMarker = destMarker;
+        }
+
+    }
+
     function createRoute(userLat, userLng) {
+
+        showNavigationStartBanner(destinationLocation, dept, userLat, userLng, lat, lng);
 
         showRouteLoading("Calculating route...");
 
@@ -1309,6 +1450,13 @@ function cancelNavigation() {
 
     // Stop following the user's live position once navigation ends
     stopLiveTracking();
+
+    // Clear the destination pin-label too
+    if (activeDestinationMarker) {
+        activeDestinationMarker.closeTooltip();
+        activeDestinationMarker.unbindTooltip();
+        activeDestinationMarker = null;
+    }
 
     hideDirections();
 
