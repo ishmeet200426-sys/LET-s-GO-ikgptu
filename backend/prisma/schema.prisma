@@ -11,13 +11,13 @@ model Student {
   id            Int      @id @default(autoincrement())
   name          String
   phone         String   @unique
-  email         String   @unique
   category      String
   course        String
   batch         String
-  passwordHash  String
-  emailVerified Boolean  @default(true)
   createdAt     DateTime @default(now())
+  email         String   @unique
+  emailVerified Boolean  @default(true)
+  passwordHash  String
 }
 
 model PendingRegistration {
@@ -28,10 +28,10 @@ model PendingRegistration {
   category     String
   course       String
   batch        String
-  passwordHash String
   otpHash      String
   otpExpiry    DateTime
   createdAt    DateTime @default(now())
+  passwordHash String
 }
 
 model OtpUsage {
